@@ -12,6 +12,9 @@ setup(
     license='',  # Or your chosen license
     packages=find_packages(),
     include_package_data=True,
+    package_data={
+        'passguard.frontend.icons': ['*.png'],
+    },
     install_requires=[
         'ttkbootstrap==1.10.1',
         'cryptography==44.0.0',

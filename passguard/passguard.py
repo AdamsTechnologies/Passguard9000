@@ -64,22 +64,38 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
             logging.error(f"Failed to initialize configurations: {ex}")
             Messagebox.show_error("Configuration Error", "Failed to load application settings.")
             self.destroy()
-
-    def login(self): # TODO CURRENTLY ALLOWS ANY USERNAME TO WORK.
-        while True:  # Keep retrying until a successful login or the user cancels
+   
+    def login(self):
+        while True:
             user_details = self._user_login()
             if not user_details:
-                print(f"DESTROYING")
+                # User canceled the login/registration dialog
                 self.destroy()
                 return
-            if (stored_setting:=self.config_settings.get('u', None)) and user_details.get('u', '') != stored_setting:
-                Messagebox.show_error(title="Login Failed", message="Incorrect username. Please try again.")
-            username = self.config_settings.get('u', None) or user_details.get('u', None)
+
+            # Retrieve registration flag and stored username (if any)
+            is_registered = self.config_settings.get('r')
+            stored_username = self.config_settings.get('u', None)
+
+            # If already registered, the entered username must match the stored username
+            if is_registered:
+                if not stored_username:
+                    Messagebox.show_error(title="Login Failed", message="Configuration error: missing username. Please re-register.")
+                    continue
+                if user_details['u'] != stored_username:
+                    Messagebox.show_error(title="Login Failed", message="Incorrect username. Please try again.")
+                    continue
+
+            # Attempt to initialize the database with the provided credentials
             try:
                 self._initialize_database(user_details=user_details)
-                self.config_settings['r'] = 1
+
+                self.config_settings['r'] = 1  # Mark registration as complete
                 self.config_settings['s'] = self.db_obj['salt']
-                self.config_settings['u'] = username
+                
+                if not stored_username:
+                    self.config_settings['u'] = user_details['u']
+
                 self.config.set_setting(**self.config_settings)
                 self.user_details = user_details
                 break  # Successful login
@@ -400,6 +416,3 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
         finally:
             self.destroy()
 
-if __name__ == '__main__':
-    app = App()
-    app.mainloop()
