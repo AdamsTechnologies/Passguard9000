@@ -1,4 +1,4 @@
-from backend.abstracts.abstract_methods import PasswordStorageInterface, EncryptionInterface, KeyStorageInterface
+from passguard.backend.abstracts.abstract_methods import PasswordStorageInterface, EncryptionInterface, KeyStorageInterface
 from datetime import datetime, timezone
 from typing import Any
 import os

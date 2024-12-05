@@ -4,8 +4,8 @@ from ttkbootstrap.constants import *
 from ttkbootstrap.dialogs import Messagebox
 from ttkbootstrap.tooltip import ToolTip
 
-from backend.controllers.password_manager import PasswordController
-from frontend.passwordPage.complex_pass_generator import PassGeneratorDialog
+from passguard.backend.controllers.password_manager import PasswordController
+from passguard.frontend.passwordPage.complex_pass_generator import PassGeneratorDialog
 
 class PasswordCreationCard(ttk.Frame):
     def __init__(self, master, pg_styles:ttk.Style, title: str, password_controller: PasswordController, data_reload_func: Callable, show_password_card:Callable, log_func:Callable, field_data: dict):

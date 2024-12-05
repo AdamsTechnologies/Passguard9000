@@ -2,12 +2,12 @@ import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from typing import Callable
 
-from backend.devsec.encrypto import Encrypto
-from frontend.passwordPage.password_list import PasswordList
-from frontend.passwordPage.password_card import PasswordCard
-from backend.controllers.password_manager import PasswordController
-from backend.abstracts.abstract_methods import KeyStorageInterface, PasswordStorageInterface
-from frontend.passwordPage.password_creation_card import NewPasswordCard, UpdatePasswordCard
+from passguard.backend.devsec.encrypto import Encrypto
+from passguard.frontend.passwordPage.password_list import PasswordList
+from passguard.frontend.passwordPage.password_card import PasswordCard
+from passguard.backend.controllers.password_manager import PasswordController
+from passguard.backend.abstracts.abstract_methods import KeyStorageInterface, PasswordStorageInterface
+from passguard.frontend.passwordPage.password_creation_card import NewPasswordCard, UpdatePasswordCard
 
 
 class PasswordFrame(ttk.Frame):

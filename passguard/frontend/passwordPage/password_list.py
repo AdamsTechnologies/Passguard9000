@@ -4,7 +4,7 @@ from datetime import datetime
 from ttkbootstrap.constants import *
 from typing import List, Dict, Any, Callable
 
-from frontend.tkReusables.scrollable_frame import ScrollableFrame
+from passguard.frontend.tkReusables.scrollable_frame import ScrollableFrame
 
 class PasswordList(ttk.Frame):
     def __init__(self, master, pg_styles:ttk.Style, values: List[tuple], items_mapping: Dict[str, Dict[str, Any]], on_select: Callable, log_func:Callable):

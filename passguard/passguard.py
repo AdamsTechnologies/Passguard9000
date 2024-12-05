@@ -1,24 +1,27 @@
+import os
+import shutil
 import logging
+import tempfile
 from typing import Literal
 from tkinter import PhotoImage
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from ttkbootstrap.dialogs import Messagebox
 
-from passguard_appsettings import AppInit
-from passguard_styles import PassGuardStyles
+from passguard.passguard_appsettings import AppInit
+from passguard.passguard_styles import PassGuardStyles
 
-from frontend.loginDialog.login_module import LoginDialog
-from frontend.passwordPage.password_frame import PasswordFrame
-from frontend.settingsPage.settings_page import SettingsFrame
-from frontend.infoPage.info_page import InfoFrame
-from frontend.tkReusables.snackbar import SnackBar
+from passguard.frontend.loginDialog.login_dialog import LoginDialog
+from passguard.frontend.passwordPage.password_frame import PasswordFrame
+from passguard.frontend.settingsPage.settings_page import SettingsFrame
+from passguard.frontend.infoPage.info_page import InfoFrame
+from passguard.frontend.tkReusables.snackbar import SnackBar
 
-from backend.devsec.encrypto import Encrypto
-from backend.devsec.key_generator import generate_key
-from backend.controllers.database_controller import SQLiteController
-from backend.databaseManager.sqlite_encrypto import encrypted_database_context
-from backend.abstracts.abstract_methods import KeyStorageInterface, PasswordStorageInterface
+from passguard.backend.devsec.encrypto import Encrypto
+from passguard.backend.devsec.key_generator import generate_key
+from passguard.backend.controllers.database_controller import SQLiteController
+from passguard.backend.databaseManager.sqlite_encrypto import encrypted_database_context
+from passguard.backend.abstracts.abstract_methods import KeyStorageInterface, PasswordStorageInterface
 
 
 from sqlite3 import DatabaseError
@@ -27,10 +30,11 @@ from sqlite3 import DatabaseError
 class App(ttk.Window):  # TODO review login page, seems slow after refectors.
     def __init__(self):
         super().__init__(themename='superhero', iconphoto=None)
-        self.iconphoto(True, PhotoImage(file='frontend/icons/PassGuardLogoII.png'))
+        self.iconphoto(True, PhotoImage(file='passguard/frontend/icons/PassGuardLogo.png'))
         self.title("PassGuard")
         self.geometry("800x500")
         self.styles = PassGuardStyles()
+        self.db_location = 'datastore.db'
 
         # Application configurations
         self.keystore = None
@@ -40,6 +44,7 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
         self.config = AppInit()
 
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
         # Initialize configurations, login, and pages
         self._init_configs()
         self.login()
@@ -60,6 +65,29 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
             Messagebox.show_error("Configuration Error", "Failed to load application settings.")
             self.destroy()
 
+    def login(self):
+        while True:  # Keep retrying until a successful login or the user cancels
+            user_details = self._user_login()
+            if not user_details:
+                print(f"DESTROYING")
+                self.destroy()
+                return
+            if (stored_setting:=self.config_settings.get('u', None)) and user_details.get('u', '') != stored_setting:
+                Messagebox.show_error(title="Login Failed", message="Incorrect username. Please try again.")
+            try:
+                self._initialize_database(user_details=user_details)
+                self.config_settings['r'] = 1
+                self.config_settings['s'] = self.db_obj['salt']
+                self.config.set_setting(**self.config_settings)
+                self.user_details = user_details
+                break  # Successful login
+            except DatabaseError as ex:
+                logging.error(f"Login failed: {ex}")
+                Messagebox.show_error(title="Login Failed", message="Incorrect password. Please try again.")
+            except Exception as ex:
+                logging.error(f"Unexpected error during login: {ex}")
+                Messagebox.show_error(title="Login Failed", message="An unexpected error occurred. Please try again.")
+    
     def _user_login(self):
         r = self.config_settings.get('r')
         s = self.config_settings.get('s')
@@ -78,13 +106,13 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
         if not username or not password:
             return None
         return {'u': username, 'p': password, 's': s}
-
+    
     def _initialize_database(self, user_details):
         try:
             self.db_context = encrypted_database_context(
-                db_path="datastore.db",
+                db_path=self.db_location,
                 encrypto_cls=Encrypto,
-                keys=[user_details['u'], user_details['p']],
+                password=user_details['p'],
                 salt=user_details.get('s', None)
             )
             self.db_obj = self.db_context.__enter__()
@@ -100,21 +128,6 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
         except Exception as ex:
             raise Exception(f"An error occurred during database initialization: {ex}")
 
-    # def _initialize_database(self, user_details):
-    #     try:
-    #         self.db_context = encrypted_database_context(
-    #             db_path="datastore.db",
-    #             encrypto_cls=Encrypto,
-    #             keys=[user_details['u'], user_details['p']],
-    #             salt=user_details.get('s', None)
-    #         )
-    #         self.db_obj = self.db_context.__enter__()
-    #         self.keystore = KeyStorageInterface(controller=SQLiteController(db=self.db_obj['sql'], table_name="km"))
-    #         self.passtore = PasswordStorageInterface(controller=SQLiteController(db=self.db_obj['sql'], table_name="pm"))
-    #         self.after(0, self._on_database_initialized)
-    #     except Exception as ex:
-    #         self.after(0, lambda: self._on_database_error(ex))
-
     def _on_database_initialized(self):
         if not self.winfo_exists():
             return
@@ -124,42 +137,7 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
     def _on_database_error(self, error):
         Messagebox.show_error("Database Error", str(error))
         self.destroy()
-
-    def login(self):
-        while True:  # Keep retrying until a successful login or the user cancels
-            user_details = self._user_login()
-            if not user_details:
-                print(f"DESTROYING")
-                self.destroy()
-                return
-            try:
-                self._initialize_database(user_details=user_details)
-                self.config_settings['r'] = 1
-                self.config_settings['s'] = self.db_obj['salt']
-                self.config.set_setting(**self.config_settings)
-                self.user_details = user_details
-                break  # Successful login
-            except DatabaseError as ex:
-                logging.error(f"Login failed: {ex}")
-                Messagebox.show_error(title="Login Failed", message="Incorrect username or password. Please try again.")
-            except Exception as ex:
-                logging.error(f"Unexpected error during login: {ex}")
-                Messagebox.show_error(title="Login Failed", message="An unexpected error occurred. Please try again.")
-
-
-
-
-    # def login(self):
-    #     user_details = self._user_login()
-    #     if user_details:
-    #         self._initialize_database(user_details=user_details)
-    #         self.config_settings['r'] = 1
-    #         self.config_settings['s'] = self.db_obj['salt']
-    #         self.config.set_setting(**self.config_settings)
-    #         self.user_details = user_details
-    #     else:
-    #         self.destroy()
-        
+    
     def create_snackbar(self,):
         # Add Snackbar
         self.snackbar = SnackBar(self, pg_styles=self.styles.style) #, bootstyle="info" # {chr(0x00A9)} copyright. # chr(8482) is the trademark symbol. 
@@ -228,10 +206,10 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
     def init_settings_page(self):
         self.settings_page = SettingsFrame(
             master=self.settings_tab,
-            parent=self,
             appearance_func=self._set_appearance_mode,
             change_password_func=self.change_master_password,
             pg_styles=self.styles.style,
+            change_master_password=self.change_master_password,
             log_func=self.log_message  # Pass log_message method
         )
         self.settings_page.grid(row=0, column=0, sticky='nsew')
@@ -249,8 +227,7 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
     # ------------------------------------------------------------------------------------------------------------------------------
     # TODO EXPERIMENTAL CODE BEGIN
     # ------------------------------------------------------------------------------------------------------------------------------
-    def change_master_password(self, current_password, new_password):
-        # Implement the password change logic here
+    def change_master_password(self, current_password, new_password): # TODO...
         try:
             username = self.user_details['u']
             salt = self.config_settings.get('s')
@@ -258,42 +235,115 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
             # Step 1: Verify the current password
             decrypted_data = self.verify_old_credentials(username, current_password, salt)
             if decrypted_data is None:
-                logging.error("Current password is incorrect.")
-                Messagebox.show_error("Password Error", "Current password is incorrect.")
+                self.log_message(message="Password Error: password is incorrect.")
+                Messagebox.show_error(title="Password Error", message="Current password is incorrect.")
                 return False
 
             # Step 2: Derive new key
             new_encryptor, new_salt = self.derive_new_key(username, new_password, salt)
 
-            # Step 3: Re-encrypt the database
-            success = self.reencrypt_database(decrypted_data, new_encryptor)
+            # Step 3: Re-encrypt the database to a temporary file
+            temp_db_fd, temp_db_path = tempfile.mkstemp()
+            os.close(temp_db_fd)  # Close the file descriptor as we'll open it in reencrypt_database
+            success = self.reencrypt_database(decrypted_data, new_encryptor, temp_db_path)
             if not success:
                 logging.error("Failed to re-encrypt the database with the new password.")
                 Messagebox.show_error("Encryption Error", "Failed to re-encrypt the database with the new password.")
+                os.remove(temp_db_path)  # Clean up temporary file
                 return False
 
-            # Step 4: Update settings
+            # Step 4: Replace the old database atomically
+            backup_db_path = self.db_location + '.bak'
+            try:
+                os.replace(self.db_location, backup_db_path)  # Backup current database
+                os.replace(temp_db_path, self.db_location)    # Replace with new database
+                os.remove(backup_db_path)                     # Remove backup after success
+            except Exception as ex:
+                logging.error(f"Failed to replace the database file: {ex}")
+                Messagebox.show_error("File Error", "Failed to replace the database file.")
+                # Attempt to restore the backup
+                if os.path.exists(backup_db_path):
+                    os.replace(backup_db_path, self.db_location)
+                if os.path.exists(temp_db_path):
+                    os.remove(temp_db_path)
+                return False
+
+            # Step 5: Reinitialize database context and controllers
+            try:
+                self.db_context.__exit__(None, None, None)
+                self.db_context = encrypted_database_context(
+                    db_path=self.db_location,
+                    encrypto_cls=Encrypto,
+                    keys=[username, new_password],
+                    salt=new_salt
+                )
+                self.db_obj = self.db_context.__enter__()
+                # Reinitialize controllers with the new database connection
+                self.keystore = KeyStorageInterface(controller=SQLiteController(db=self.db_obj['sql'], table_name="km"))
+                self.passtore = PasswordStorageInterface(controller=SQLiteController(db=self.db_obj['sql'], table_name='pm'))
+            except Exception as ex:
+                logging.error(f"Failed to reinitialize database context: {ex}")
+                Messagebox.show_error("Initialization Error", "Failed to reinitialize database context.")
+                # Roll back to old database
+                os.replace(self.db_location, temp_db_path)
+                os.replace(backup_db_path, self.db_location)
+                os.remove(temp_db_path)
+                return False
+
+            # Step 6: Update settings
             self.update_settings(username, new_salt)
 
-            # Update the in-memory encryption key and database connection
-            self.db_context.__exit__(None, None, None)
-            self.db_context = encrypted_database_context(
-                db_path="datastore.db",
-                encrypto_cls=Encrypto,
-                keys=[username, new_password],
-                salt=new_salt
-            )
-            self.db_obj = self.db_context.__enter__()
-            # Reinitialize controllers with the new database connection
-            self.keystore = KeyStorageInterface(controller=SQLiteController(db=self.db_obj['sql'], table_name="km"))
-            self.passtore = PasswordStorageInterface(controller=SQLiteController(db=self.db_obj['sql'], table_name='pm'))
-
-            logging.info("Master password changed successfully.")
+            self.log_message(message="Password changed successfully.")
             return True
         except Exception as ex:
             logging.error(f"An error occurred while changing the password: {ex}")
             Messagebox.show_error("Error", f"An error occurred while changing the password: {ex}")
             return False
+    
+    # def change_master_password(self, current_password, new_password):
+    #     try:
+    #         username = self.user_details['u']
+    #         salt = self.config_settings.get('s')
+
+    #         # Step 1: Verify the current password
+    #         decrypted_data = self.verify_old_credentials(username, current_password, salt)
+    #         if decrypted_data is None:
+    #             self.log_message(message="Password Error: password is incorrect.")
+    #             Messagebox.show_error(title="Password Error", message="Current password is incorrect.")
+    #             return False
+
+    #         # Step 2: Derive new key
+    #         new_encryptor, new_salt = self.derive_new_key(username, new_password, salt)
+
+    #         # Step 3: Re-encrypt the database
+    #         success = self.reencrypt_database(decrypted_data, new_encryptor)
+    #         if not success:
+    #             logging.error("Failed to re-encrypt the database with the new password.")
+    #             Messagebox.show_error("Encryption Error", "Failed to re-encrypt the database with the new password.")
+    #             return False
+
+    #         # Step 4: Update settings
+    #         self.update_settings(username, new_salt)
+
+    #         # Update the in-memory encryption key and database connection
+    #         self.db_context.__exit__(None, None, None)
+    #         self.db_context = encrypted_database_context(
+    #             db_path=self.db_location,
+    #             encrypto_cls=Encrypto,
+    #             keys=[username, new_password],
+    #             salt=new_salt
+    #         )
+    #         self.db_obj = self.db_context.__enter__()
+    #         # Reinitialize controllers with the new database connection
+    #         self.keystore = KeyStorageInterface(controller=SQLiteController(db=self.db_obj['sql'], table_name="km"))
+    #         self.passtore = PasswordStorageInterface(controller=SQLiteController(db=self.db_obj['sql'], table_name='pm'))
+
+    #         self.log_message(message="password changed")
+    #         return True
+    #     except Exception as ex:
+    #         logging.error(f"An error occurred while changing the password: {ex}")
+    #         Messagebox.show_error("Error", f"An error occurred while changing the password: {ex}")
+    #         return False
 
     def verify_old_credentials(self, username, password, salt):
         try:
@@ -302,7 +352,7 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
             encryptor = Encrypto(encryption_key)
 
             # Read the encrypted database
-            with open('datastore.db', 'rb') as f:
+            with open(self.db_location, 'rb') as f:
                 encrypted_data = f.read()
 
             # Decrypt the data
@@ -322,7 +372,7 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
             # Encrypt the data with the new key
             encrypted_data = new_encryptor.encrypt(decrypted_data)
             # Write the encrypted data back to the database file
-            with open('datastore.db', 'wb') as f:
+            with open(self.db_location, 'wb') as f:
                 f.write(encrypted_data)
             return True
         except Exception as ex:

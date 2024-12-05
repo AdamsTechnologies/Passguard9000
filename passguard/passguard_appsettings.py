@@ -1,16 +1,16 @@
-from backend.devsec.encrypto import Encrypto
-from backend.controllers.database_controller import SQLiteController
+from passguard.backend.devsec.encrypto import Encrypto
+from passguard.backend.controllers.database_controller import SQLiteController
 
 class AppInit:
     def __init__(self):
         self.settings_schema = dict(
+            u='TEXT',
             r='INTEGER',
             s='TEXT',
-            color_theme='TEXT',
             appearance_theme='TEXT',
             # TODO can expand settings here.
         )
-        self.upsert_keys = ['r','s'] # obfuscation!
+        self.upsert_keys = ['u','r','s'] # obfuscation!
         
         self.settings = SQLiteController(db_file='app_settings.db', table_name='setting', schema=self.settings_schema, upsert_keys=self.upsert_keys)
         self.encrypto = Encrypto
@@ -55,6 +55,7 @@ class AppInit:
         Params Expecting:
             Upsert Keys:
                 ```
+                u,
                 r,
                 s
                 ```
@@ -68,6 +69,7 @@ class AppInit:
         """
         Params Expecting:
             ```
+            u,
             r,
             s,
             color_theme,

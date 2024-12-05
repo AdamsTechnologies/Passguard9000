@@ -4,7 +4,7 @@ from typing import Callable
 from ttkbootstrap.constants import *
 from ttkbootstrap.tooltip import ToolTip
 
-from backend.controllers.password_manager import PasswordController
+from passguard.backend.controllers.password_manager import PasswordController
 
 class PasswordCard(ttk.Frame):
     def __init__(self, master, parent, pg_styles:ttk.Style, password_controller: PasswordController, on_select: Callable, log_func:Callable, id: str, username: str, password: str, service: str, servicetype: str, url: str, **params):

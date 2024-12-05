@@ -3,7 +3,7 @@ import logging
 import sqlite3
 from collections import namedtuple
 from contextlib import contextmanager
-from backend.abstracts.abstract_methods import DatabaseInterface
+from passguard.backend.abstracts.abstract_methods import DatabaseInterface
 
 class SQLite(DatabaseInterface):
     """

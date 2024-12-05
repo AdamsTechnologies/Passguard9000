@@ -2,8 +2,8 @@ import logging
 from typing import Any, List, Dict
 import inspect
 
-from backend.databaseManager.sql import SQLite
-from backend.databaseManager.scripts_generator import scripts
+from passguard.backend.databaseManager.sql import SQLite
+from passguard.backend.databaseManager.scripts_generator import scripts
 
 
 class SQLiteController:

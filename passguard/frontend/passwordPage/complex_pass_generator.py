@@ -2,7 +2,7 @@ import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from ttkbootstrap.dialogs import Dialog, Messagebox
 
-from backend.helpers.password_generator import PasswordFactory
+from passguard.backend.helpers.password_generator import PasswordFactory
 
 class PassGeneratorDialog(Dialog):
     def __init__(self, parent, title: str = "Password Generator", text: str = "Generate a customized password"):

@@ -3,12 +3,12 @@ from typing import Callable
 from ttkbootstrap.constants import *
 
 class SettingsFrame(ttk.Frame):
-    def __init__(self, master, pg_styles:ttk.Style, parent, appearance_func: Callable, change_password_func: Callable, log_func:Callable):
+    def __init__(self, master, pg_styles:ttk.Style, appearance_func: Callable, change_password_func: Callable, change_master_password:Callable, log_func:Callable):
         super().__init__(master)
         self.master = master
-        self.parent = parent
         self.appearance_func = appearance_func
         self.change_password_func = change_password_func
+        self.change_master_password = change_master_password
         self.style = pg_styles
         self.log_func = log_func
         self.available_themes = self.style.theme_names()
@@ -191,6 +191,10 @@ class SettingsFrame(ttk.Frame):
         current_password = self.current_password_entry.get()
         new_password = self.new_password_entry.get()
         confirm_password = self.confirm_password_entry.get()
+        
+        # if new_password == confirm_password:
+        #     self.change_master_password(current_password=current_password, new_password=new_password)
+
         # TODO
         # confirm = Messagebox.yesno( 
         #     title="Confirm Master Password Change",
