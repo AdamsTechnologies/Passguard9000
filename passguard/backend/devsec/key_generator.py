@@ -61,25 +61,13 @@ def generate_key(password:str, salt:bytes=None):
     if salt is None:
         salt = os.urandom(16)
 
-    # kdf = Argon2id(
-    #     memory_cost=2**16, # 64MB # TODO SET TO 48MB IF ON IOS or Android? one of the phones.. do research before shipping.
-    #     time_cost=2, # iterations
-    #     parallelism=1,
-    #     length=32, # key length in bytes
-    #     salt=salt
-    # )
     kdf = Argon2id(
         salt=salt,
         length=32,         # Desired key length in bytes (256 bits)
         iterations=3,      # Number of iterations (time_cost)
         lanes=1,           # Number of parallel threads (parallelism)
         memory_cost=65536  # Memory cost in KiB (64 MiB)
-        # ad and secret are optional and default to None
     )
-    # key = kdf.derive(password.encode('utf-8'))
-    # key_b64 = base64.urlsafe_b64decode(key).decode('utf-8')
-    # return key_b64, salt
-    
     key = base64.urlsafe_b64encode(kdf.derive(password.encode('utf-8')))
     key_str = key.decode('utf-8')
     return key_str, salt

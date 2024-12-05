@@ -65,7 +65,7 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
             Messagebox.show_error("Configuration Error", "Failed to load application settings.")
             self.destroy()
 
-    def login(self):
+    def login(self): # TODO CURRENTLY ALLOWS ANY USERNAME TO WORK.
         while True:  # Keep retrying until a successful login or the user cancels
             user_details = self._user_login()
             if not user_details:
@@ -74,10 +74,12 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
                 return
             if (stored_setting:=self.config_settings.get('u', None)) and user_details.get('u', '') != stored_setting:
                 Messagebox.show_error(title="Login Failed", message="Incorrect username. Please try again.")
+            username = self.config_settings.get('u', None) or user_details.get('u', None)
             try:
                 self._initialize_database(user_details=user_details)
                 self.config_settings['r'] = 1
                 self.config_settings['s'] = self.db_obj['salt']
+                self.config_settings['u'] = username
                 self.config.set_setting(**self.config_settings)
                 self.user_details = user_details
                 break  # Successful login
