@@ -10,6 +10,7 @@ from ttkbootstrap.dialogs import Messagebox
 
 from passguard.passguard_appsettings import AppInit
 from passguard.passguard_styles import PassGuardStyles
+from passguard.resource_path import resource_path
 
 from passguard.frontend.loginDialog.login_dialog import LoginDialog
 from passguard.frontend.passwordPage.password_frame import PasswordFrame
@@ -29,8 +30,8 @@ from sqlite3 import DatabaseError
 # EXECUTE: python -m adamsutils.PassGuard.passguard
 class App(ttk.Window):  # TODO review login page, seems slow after refectors.
     def __init__(self):
-        super().__init__(themename='superhero', iconphoto=None)
-        self.iconphoto(True, PhotoImage(file='passguard/frontend/icons/PassGuardLogo.png'))
+        super().__init__(themename='superhero', iconphoto=None) #, iconphoto=None
+        self.iconphoto(True, PhotoImage(file=resource_path('passguard/frontend/icons/PassGuardLogo.png')))
         self.title("PassGuard")
         self.geometry("800x500")
         self.styles = PassGuardStyles()
@@ -416,3 +417,6 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
         finally:
             self.destroy()
 
+# if __name__ == '__main__':
+#     app = App()
+#     app.mainloop()

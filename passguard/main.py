@@ -1,5 +1,4 @@
-import ttkbootstrap as ttk
-from passguard.passguard import App
+from passguard.passguard_app import App
 
 def main():
     app = App()
