@@ -29,16 +29,17 @@ class PasswordCreationCard(ttk.Frame):
         self.show_password_card = show_password_card
         self.log_func = log_func
         # self.create_form()
-        self.DEFAULT_VAL = str(chr(0x25CF) * 15)
+        self._default_ = '-----'
+        self.DEFAULT_PASSWORD = str(chr(0x25CF) * 15)
         self.FONT_TITLE = ("Helvetica", 16, "bold")
         self.FONT_LABEL = ("Helvetica", 9)
         self.FONT_PLACEHOLDER = ("Helvetica", 8, "italic")
         self.PLACEHOLDER_COLOR = "grey"
-
+        self.defaultables = {'username_entry', 'service_entry'}
         self.form_fields = [ # UPDATE HERE IF YOU NEED TO ADD MORE ENTRIES.. may need a light refactor to include in db.
             ("Username", "username", "MyUsername", False),
-            ("Password", "password", self.DEFAULT_VAL, True),
-            ("Service", "service", "e.g., Chase Bank, MySpace", False),
+            ("Password", "password", self.DEFAULT_PASSWORD, True),
+            ("Service", "service", "e.g., Bank, website", False),
             ("Service Type", "servicetype", "e.g., Bills, Social Media", False),
             ("URL", "url", "https://example.com/login", False),
         ]
@@ -105,13 +106,13 @@ class PasswordCreationCard(ttk.Frame):
     def create_entry(self, name, placeholder, row, column, is_password=False):
         entry = ttk.Entry(self, show='')
         if is_password:
-            entry.insert(0, self.DEFAULT_VAL)
+            entry.insert(0, self.DEFAULT_PASSWORD)
         else:
             entry.insert(0, placeholder)
         entry.grid(row=row, column=column, padx=5, pady=5, sticky='ew')
         
         setattr(self, name, entry)
-
+        entry.name = name  # added
         # Set placeholder style
         entry.configure(foreground=self.PLACEHOLDER_COLOR, font=self.FONT_PLACEHOLDER)
         entry.bind("<FocusIn>", lambda event, e=entry, p=placeholder, ip=is_password: self.clear_placeholder(e, p, ip))
@@ -121,23 +122,23 @@ class PasswordCreationCard(ttk.Frame):
     """
     HANDLE CLICKING INTO ENTRY EVENTS, FOCUSIN and FOCUSOUT
     """
-    def clear_placeholder(self, entry, placeholder, is_password):
-        def clear_entry():
-            entry.delete(0, "end")
-            entry.configure(foreground=self.style.colors.fg, font=self.FONT_LABEL)
+    def _clear_entry(self, entry):
+        entry.delete(0, "end")
+        # entry.configure(foreground=self.style.colors.fg, font=self.FONT_LABEL)
 
+    def clear_placeholder(self, entry, placeholder, is_password):
         if entry.get() == placeholder:
             if is_password:
                 self.show_password_var.set(value=True)
                 self.toggle_password_visibility(entry)
                 if self._temp_val:
                     return # return before we execute clear_entry(). this allows us to keep set-values. 
-            clear_entry()
-
+            self._clear_entry(entry=entry)
+            entry.configure(foreground=self.style.colors.fg, font=self.FONT_LABEL)
 
     def add_placeholder(self, entry, placeholder, is_password):
-        if not entry.get():
-            if is_password: # TODO resolve this to get the passwords button working properly
+        if not (entry_val:= entry.get()) or entry_val == self._default_:
+            if is_password:
                 self.show_password_var.set(value=False)
             entry.insert(0, placeholder)
             entry.configure(foreground=self.PLACEHOLDER_COLOR, font=self.FONT_PLACEHOLDER)
@@ -187,19 +188,27 @@ class PasswordCreationCard(ttk.Frame):
             self.create_button(name="cancel_button", text="Cancel", command=self.close_frame, parent=self.buttons_frame, row=0, column=1, style='Secondary.TButton')
 
     def populate_fields(self, field_data):
+        def _cmp(entry, key, insert, fg, font):
+            if key.lower() == "password":
+                entry.configure(foreground=fg, font=font)
+                entry.config(show='')
+                entry.insert(0, self.DEFAULT_PASSWORD)
+            else:
+                self._clear_entry(entry=entry)
+                entry.configure(foreground=fg, font=font)
+                entry.insert(0, insert)
+        
         for label_text, key, placeholder, is_password in self.form_fields:
             value = field_data.get(key, "")
             entry = self.entries[key]
             entry.delete(0, 'end')
 
             if value != placeholder:
-                entry.configure(foreground=self.style.colors.fg, font=self.FONT_LABEL) # TODO handle default values.
-                
-            if key == "password":
-                entry.config(show='')
-                entry.insert(0, self.DEFAULT_VAL)
-            else:
-                entry.insert(0, value)
+                if value != self._default_:
+                    _cmp(entry=entry, key=key, insert=value, fg=self.style.colors.fg, font=self.FONT_LABEL)
+                elif value == self._default_:
+                    _cmp(entry=entry, key=key, insert=placeholder, fg=self.PLACEHOLDER_COLOR, font=self.FONT_PLACEHOLDER)
+
 
     def password_generator(self):
         """
@@ -238,7 +247,7 @@ class PasswordCreationCard(ttk.Frame):
 
     def toggle_password_visibility(self, entry:ttk.Entry):
         validated_entry = self.validate_entry(entry.get())
-        if not self._temp_val and validated_entry == self.DEFAULT_VAL:
+        if not self._temp_val and validated_entry == self.DEFAULT_PASSWORD:
             entry.configure(foreground=self.PLACEHOLDER_COLOR, font=self.FONT_PLACEHOLDER)
         else:
             entry.configure(foreground=self.style.colors.fg, font=self.FONT_LABEL)
@@ -270,32 +279,31 @@ class PasswordCreationCard(ttk.Frame):
         self.close_frame(log_flag=log_flag)
 
     def get_password(self):
-        entry = self.entries['password']
-        if entry.get() == self.DEFAULT_VAL:
-            return self._temp_val if self._temp_val is not None else self.field_data.get('password')
+        password_entry = self.entries['password']
+        if password_entry.get() == self.DEFAULT_PASSWORD:
+            return self._temp_val if self._temp_val is not None else self.password_controller._decrypt_item(self.field_data.get('password'))
         else:
-            return entry.get()
-
-    def save_password(self):
-        data = {key: entry.get() if key.lower() != 'password' else self.get_password() for key, entry in self.entries.items()}
+            return password_entry.get()
+    
+    def save_password(self): # TODO solve this.... password issue
+        data = {}
+        for key, entry in self.entries.items():
+            if key.lower() == 'password':  # Handle password field
+                password = self.get_password()
+                if password == self.DEFAULT_PASSWORD:  # Unchanged password
+                    data[key] = self.field_data.get('password')
+                else:
+                    data[key] = password
+            else:  # Handle other fields
+                value = entry.get()
+                data[key] = self._default_ if not value or value in [field[2] for field in self.form_fields] else value
+        
         if not data.get("id"):
             data['id'] = self.field_data.get('id', None)
+
         response = self.password_controller.upsert_record(**data)
-        self.log_func("success") # LOG MSG
+        self.log_func("success")  # LOG MSG
         self.reload_and_close(log_flag=False)
-
-        # data = {} # TODO to support the refactor swapping default values.
-        # for label, key, default, is_password in self.form_fields:
-        #     if is_password:
-        #         data[key] = self.get_password() # gets the encrypted password.
-        #     else:
-        #         entry_value = self.entries.get(key).get() if key in self.entries else '-----'
-        #         data[key] = entry_value if entry_value != default else '-----'
-        # if not data.get("id"):
-        #     data['id'] = self.field_data.get("id", None)
-
-        # response = self.password_controller.upsert_record(**data)
-        # self.reload_and_close()
 
     def delete_password(self):
         data = {key: entry.get() for key, entry in self.entries.items()}
@@ -340,16 +348,16 @@ class NewPasswordCard(PasswordCreationCard):
         this logic helps us toggle the password visible and not, while also ensuring Passguard never stores a decrypted password in a variable or anything.
         """
         if self.show_password_var.get() == True:
-            if data != self.DEFAULT_VAL:
+            if data != self.DEFAULT_PASSWORD:
                 return data
-            elif data == self.DEFAULT_VAL and self._temp_val is not None:
+            elif data == self.DEFAULT_PASSWORD and self._temp_val is not None:
                 return self._temp_val
             else:
                 return ''
         else:
-            if data != self.DEFAULT_VAL and data != self._temp_val:
+            if data != self.DEFAULT_PASSWORD and data != self._temp_val:
                 self._temp_val = data
-            return self.DEFAULT_VAL
+            return self.DEFAULT_PASSWORD
 
     def validate_entry(self, data) -> Any:
         """
@@ -360,16 +368,16 @@ class NewPasswordCard(PasswordCreationCard):
         breaking them apart simplified things 10x
         """
         if self.show_password_var.get() == True:
-            if data == self.DEFAULT_VAL:
+            if data == self.DEFAULT_PASSWORD:
                 return self._temp_val if self._temp_val is not None else ''
             else:
                 return data
         else:
-            if data != self.DEFAULT_VAL:
+            if data != self.DEFAULT_PASSWORD:
                 self._temp_val = data
-                return self.DEFAULT_VAL
+                return self.DEFAULT_PASSWORD
             else:
-                return self.DEFAULT_VAL
+                return self.DEFAULT_PASSWORD
 
 
 # ----------------------------------------------------------------------------------------
@@ -385,41 +393,44 @@ class UpdatePasswordCard(PasswordCreationCard):
         self.populate_fields(self.field_data)
 
     def validate_pw_entry_data(self, data: Any) -> Any:
-        password_received = True if self.field_data.get('password') is not None else False
-        if password_received and data == self.field_data.get("password"):
+        if data == self.field_data.get('password'):
             return self.password_controller._decrypt_item(data)
         else:
             return data
-
+    
     def handle_password_toggle(self, data: Any) -> Any:
         if self.show_password_var.get() == True:
-            if data != self.DEFAULT_VAL:
-                return self.validate_pw_entry_data(data=data)
-            elif data == self.DEFAULT_VAL and self._temp_val is not None:
+            if data != self.DEFAULT_PASSWORD and data != self._default_:
+                return self.validate_pw_entry_data(data)
+            elif data == self.DEFAULT_PASSWORD and self._temp_val is not None:
                 return self.validate_pw_entry_data(data=self._temp_val)
+            elif data == self.DEFAULT_PASSWORD:
+                return self.validate_pw_entry_data(data=self.field_data.get('password'))
         else:
-            if data != self.DEFAULT_VAL and data != self._temp_val:
+            if data != self.DEFAULT_PASSWORD and data != self._temp_val:
                 self._temp_val = data
-            return self.DEFAULT_VAL
+            return self.DEFAULT_PASSWORD
 
     def validate_entry(self, data) -> Any:
-        password_received = True if self.field_data.get('password') is not None else False
-        if self.show_password_var.get() == True:
-            if data == self.DEFAULT_VAL:
-                return self._temp_val if self._temp_val is not None else self.field_data.get('password')
+        """
+        Validates the password entry and determines the correct value to save.
+        """
+        is_password_received = self.field_data.get('password') is not None
+
+        if self.show_password_var.get():  # If password is visible
+            if data == self.DEFAULT_PASSWORD or data == self._default_:
+                return self._temp_val if self._temp_val else self.field_data.get('password')
             else:
                 return data
-        else:
-            if data != self.DEFAULT_VAL:
-                if password_received:
+        else:  # If password is hidden
+            if data != self.DEFAULT_PASSWORD and data != self._default_:
+                if is_password_received:
                     if data != self.password_controller._decrypt_item(self.field_data.get('password')):
-                        self._temp_val = data
+                        self._temp_val = data  # New password
                     else:
-                        self._temp_val = self.field_data.get('password')
-                return self.DEFAULT_VAL
-            elif data == self.DEFAULT_VAL:
-                if password_received:
-                    self._temp_val = self.field_data.get('password')
-                else:
-                    self._temp_val = data
-                return self.DEFAULT_VAL
+                        self._temp_val = self.field_data.get('password')  # Original password
+                return self.DEFAULT_PASSWORD
+            elif data == self.DEFAULT_PASSWORD:
+                self._temp_val = self.field_data.get('password') if is_password_received else None
+                return self.DEFAULT_PASSWORD
+            
