@@ -137,7 +137,7 @@ class InfoFrame(ttk.Frame):
         features = [
             "No internet connection required or used.",
             "Securely stores and manages your passwords.",
-            "Robust encryption ensures data protection.",
+            "Layered Security and robust encryption ensures data protection.",
             "Easily update and retrieve stored credentials.",
             "We respect your privacy: No tracking, only encryption.",
         ]
