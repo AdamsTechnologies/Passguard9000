@@ -14,9 +14,7 @@ class PasswordFrame(ttk.Frame):
     """
     PASSWORDFRAME FEATURES:
         * double clicking a button in the passwordlist will copy the password to clipboard. *
-        * passwordCreationCard.save_password refactor! code is nearly complete but staged. needs to handle a true default for database **
-        * MUST HANDLE NULL VALUES FOR ALL FIELDS ***
-
+        ** make password list case senstive, allow a setting to make it title case **
     LEGEND:
         * - low priority.
         ** - medium priority.
