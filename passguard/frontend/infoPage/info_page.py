@@ -7,7 +7,7 @@ class InfoFrame(ttk.Frame):
     def __init__(self, master, pg_styles: ttk.Style, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
         self.style = pg_styles
-        self.email = 'support@passguard.com'  # Updated email address
+        self.email = 'jakeadams@duck.com'  # TODO Updated email address
         self.nav_buttons = {}
         self.selected = None  # To track the currently selected navigation item
 
@@ -18,13 +18,13 @@ class InfoFrame(ttk.Frame):
 
         # Left Navigation Frame
         self.navigation_frame = ttk.Frame(self)
-        self.navigation_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=10)
+        self.navigation_frame.grid(row=0, column=0, sticky='nsew') # , padx=5, pady=10
         self.navigation_frame.columnconfigure(0, weight=1)
 
         # Content Frame
         self.content_frame = ttk.Frame(self)
-        self.content_frame.grid(row=0, column=1, sticky='nsew', padx=(5, 10), pady=10)
-        self.content_frame.columnconfigure(0, weight=1)
+        self.content_frame.grid(row=0, column=1, sticky='nsew') # , padx=5, pady=10
+        self.content_frame.columnconfigure(1, weight=1)
         self.content_frame.rowconfigure(0, weight=1)
 
         # Navigation items mapping
@@ -51,11 +51,11 @@ class InfoFrame(ttk.Frame):
             text="Information",
             font=('Helvetica', 16, 'bold')
         )
-        self.navigation_label.grid(row=0, column=0, pady=(10, 5), sticky='nw')
+        self.navigation_label.grid(row=0, column=0, padx=(10,0), pady=(10, 5), sticky='nw')
 
         # Divider
         self.divider = ttk.Separator(self.navigation_frame, orient='horizontal')
-        self.divider.grid(row=1, column=0, sticky='ew', pady=(0, 10))
+        self.divider.grid(row=1, column=0, sticky='ew', padx=(10,0)) #(row=1, column=0, sticky='ew', pady=(0, 10))
 
         # Navigation Buttons with custom styles
         for index, item in enumerate(self.nav_items.keys()):
@@ -65,7 +65,7 @@ class InfoFrame(ttk.Frame):
                 command=lambda value=item: self.select_navigation_item(value),
                 style="LEFTNAV.PassGuardLeftNav.TButton"
             )
-            button.grid(row=index + 2, column=0, sticky='ew')
+            button.grid(row=index + 2, column=0, sticky='ew', padx=(10,0))
             self.nav_buttons[item] = button
 
         # Add weight to rows to push content to the top
@@ -105,7 +105,7 @@ class InfoFrame(ttk.Frame):
             frame,
             text="PassGuard 9000™",
             font=('Helvetica', 18, 'bold'),
-        ).grid(row=row, column=0, pady=(0, 10), padx=20, sticky='n')
+        ).grid(row=row, column=0, pady=5, padx=10, sticky='n')#(row=row, column=0, pady=(0, 10), padx=20, sticky='n')
         row += 1
 
         ttk.Separator(frame, orient='horizontal').grid(row=row, column=0, sticky='ew', padx=20)
@@ -137,7 +137,7 @@ class InfoFrame(ttk.Frame):
         features = [
             "No internet connection required or used.",
             "Securely stores and manages your passwords.",
-            "robust encryption ensures data protection.",
+            "Robust encryption ensures data protection.",
             "Easily update and retrieve stored credentials.",
             "We respect your privacy: No tracking, only encryption.",
         ]
@@ -166,7 +166,7 @@ class InfoFrame(ttk.Frame):
             frame,
             text="Product Roadmap",
             font=('Helvetica', 18, 'bold'),
-        ).grid(row=row, column=0, pady=(0, 10), padx=20, sticky='n')
+        ).grid(row=row, column=0, pady=5, padx=10, sticky='n') #(row=row, column=0, pady=(0, 10), padx=20, sticky='n')
         row += 1
 
         ttk.Separator(frame, orient='horizontal').grid(row=row, column=0, sticky='ew', padx=20)
@@ -181,17 +181,18 @@ class InfoFrame(ttk.Frame):
         row += 1
 
         roadmap_items = [
-            "Change master password.",
-            "Customizable database storage location (e.g., USB, external drives).",
-            "Mobile app integration for Android and iOS.",
-            "Password strength analysis and recommendations.",
-            "further customization",
+            "Change master password",
+            "Customizable database storage location (e.g., USB, external drives)",
+            "Web Browser extension",
+            "Mobile app integration for Android and iOS",
+            "Password strength analysis and recommendations",
+            "Theme Builder",
         ]
         for item in roadmap_items:
             ttk.Label(
                 frame,
                 text=f"• {item}",
-                font=('Helvetica', 12),
+                font=('Helvetica', 12)
             ).grid(row=row, column=0, padx=40, pady=2, sticky='w')
             row += 1
 
