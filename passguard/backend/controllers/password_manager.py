@@ -137,14 +137,14 @@ class PasswordController:
         loops over data list; tries to call upsert_record() for each item in list.
         catches errors and logs them.
         """
-        error_list = []
+        cnt=0
         for record in data:
             try:
                 self.upsert_record(**record)
             except Exception as ex:
-                error_list.append({**record, 'error':ex})
-        if error_list:
-            logging.warning(f"{len(error_list)} errors occured while processing upsert_multiple_records.. {error_list}")
+                cnt+=1
+        if cnt>0:
+            logging.warning(f"{cnt} errors occured while processing upsert_multiple_records..")
 
     def remove_record(self, **params):
         """

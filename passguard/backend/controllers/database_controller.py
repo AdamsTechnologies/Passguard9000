@@ -100,11 +100,11 @@ class SQLiteController:
             if cursor:
                 cursor.execute(incr_script)
                 resp = cursor.fetchone()
-                self._log_message(log_msg=f"{resp=}",system_generated=True)
+                # self._log_message(log_msg=f"{resp=}",system_generated=True)
                 self.batch_id = resp[f'max_{incr_field}']
             else:
                 self.batch_id = (self.database.query(incr_script))[0][0] #[f'max_{incr_field}'] #TODO figure out what the response looks like..
-        self._log_message(log_msg=f"{self.batch_id=}", severity='info', system_generated=True)
+        # self._log_message(log_msg=f"{self.batch_id=}", severity='info', system_generated=True)
         return self.batch_id
     
 
@@ -150,7 +150,7 @@ class SQLiteController:
         if incr_field:# why'd I do this to myself.
             self.get_batch_no(table_name, incr_field)
         success_response= dict(status_code=200, log_msg=f"Successfully created {table_name}", table_name=table_name, incr_field=incr_field, schema=schema, system_generated=True)
-        self._log_message(**success_response)
+        # self._log_message(**success_response)
         return success_response
     
     # is subclass parents log_exceptions.
@@ -173,7 +173,7 @@ class SQLiteController:
                 cursor.executemany(query, values)
             
             resp = dict(status_code=200, severity='info', log_msg=f"Appended {total_rows} rows to {table_name}.", system_generated=True)
-            self._log_message(**resp)
+            # self._log_message(**resp)
             return resp
 
     def _upsert_data(self, table_name:str, data:List[Dict[str, Any]], incr_field:str=None, unique_keys: List[str] = None):
@@ -357,4 +357,4 @@ class SQLiteController:
         """
         create_table_script = self._create_table_script(table_name, schema)
         result = self.database.query(create_table_script)
-        self._log_message(status_code=200,severity='info',log_msg=f"Table '{table_name}' {result=}",system_generated=True)
+        # self._log_message(status_code=200,severity='info',log_msg=f"Table '{table_name}' {result=}",system_generated=True)
