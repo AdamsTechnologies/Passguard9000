@@ -7,6 +7,7 @@ from ttkbootstrap.constants import *
 from passguard.backend.devsec.deterministic_hash import hash_object
 
 class LoginDialog(tk.Toplevel):
+    """For Security this module will automatically and irreversably hash the users input"""
     def __init__(self, parent, title: str = "Login", text: str = "Please enter your credentials"):
         super().__init__(parent)
         self.parent = parent
