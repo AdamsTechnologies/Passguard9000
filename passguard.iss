@@ -22,7 +22,7 @@ SetupIconFile=.\passguardInstallerIcon.ico
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
-
+LicenseFile=LICENSE.PASSGUARD
 
 [Files]
 ; The {app} constant refers to the installation directory chosen by the user

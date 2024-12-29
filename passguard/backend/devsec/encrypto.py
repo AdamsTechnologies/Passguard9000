@@ -26,7 +26,7 @@ class Encrypto(EncryptionInterface):
         try:
             return base64.urlsafe_b64decode(obj.encode('utf-8'))
         except Exception as ex:
-            logging.warning(f"decode Error: {str(ex)}")
+            logging.warning(f"decode Error")
             raise ex
     
     def _encode(self, obj):

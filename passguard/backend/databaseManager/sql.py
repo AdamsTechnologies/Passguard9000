@@ -47,7 +47,7 @@ class SQLite(DatabaseInterface):
             try:
                 self.conn = sqlite3.connect(self.db_file, uri=self.uri)
             except sqlite3.Error as ex:
-                logging.error(f"Connection failed: {ex}")
+                logging.error(f"Connection failed.")
                 raise ex
 
     def _close_up(self):
@@ -127,7 +127,7 @@ class SQLite(DatabaseInterface):
                 results = cursor.fetchall()
                 return results
             except Exception as ex:
-                logging.error(f"failed executing: '{query}': {ex}")
+                logging.error(f"failed executing query.")
                 raise ex
 
     def execute_commands(self, sql: any):
@@ -149,5 +149,5 @@ class SQLite(DatabaseInterface):
                 try:
                     cursor.execute(*cmd) if isinstance(cmd, tuple) else cursor.execute(cmd)
                 except Exception as ex:
-                    logging.error(f"Failed to execute command '{cmd}': {ex}")
+                    logging.error(f"Failed to execute command.")
                     raise ex

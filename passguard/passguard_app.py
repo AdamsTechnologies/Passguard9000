@@ -31,8 +31,8 @@ from sqlite3 import DatabaseError
 class App(ttk.Window):  # TODO review login page, seems slow after refectors.
     def __init__(self):
         super().__init__(themename='superhero', iconphoto=None) #, iconphoto=None
-        self.iconphoto(True, PhotoImage(file=resource_path('passguard/frontend/icons/PassGuardLogo.png')))
-        self.title("PassGuard")
+        # self.iconphoto(True, PhotoImage(file=resource_path('passguard/frontend/icons/PassGuardLogo.png'))) # TODO UNCOMMENT THIS OUT
+        self.title("PassGuard9000")
         self.geometry("800x500")
         self.styles = PassGuardStyles()
         self.db_location = 'datastore.db'
