@@ -182,10 +182,9 @@ class InfoFrame(ttk.Frame):
 
         roadmap_items = [
             "Change master password",
-            "Customizable database storage location (e.g., USB, external drives)",
+            "Customizable database location (e.g., USB, external drives)",
             "Web Browser extension",
             "Mobile app integration for Android and iOS",
-            "Password strength analysis and recommendations",
             "Theme Builder",
         ]
         for item in roadmap_items:
