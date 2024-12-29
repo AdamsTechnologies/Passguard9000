@@ -62,7 +62,7 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
             appearance_theme = self.config_settings.get('appearance_theme', 'superhero')
             self._set_appearance_mode(theme_name=appearance_theme, update_tbl=False)
         except Exception as ex:
-            logging.error(f"Failed to initialize configurations: {ex}")
+            logging.error(f"Failed to initialize config settings")
             Messagebox.show_error("Configuration Error", "Failed to load application settings.")
             self.destroy()
    

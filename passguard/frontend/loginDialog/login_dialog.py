@@ -4,12 +4,14 @@ import ttkbootstrap as ttk
 from typing import Optional, Dict
 from ttkbootstrap.constants import *
 
+from passguard.backend.devsec.deterministic_hash import hash_object
+
 class LoginDialog(tk.Toplevel):
     def __init__(self, parent, title: str = "Login", text: str = "Please enter your credentials"):
         super().__init__(parent)
         self.parent = parent
         self.title(title)
-        self.geometry("350x200")
+        self.geometry("350x225")
         self.style = ttk.Style()
         self.resizable(False, False)
         self.transient(parent)
@@ -95,8 +97,8 @@ class LoginDialog(tk.Toplevel):
             self.password_entry.insert(0, self.password_placeholder)
 
     def _ok_event(self, event=None):
-        username = self.username_entry.get()
-        password = self.password_entry.get()
+        username = hash_object(self.username_entry.get())
+        password = hash_object(self.password_entry.get())
 
         if username == self.username_placeholder or not username:
             self.username_entry.delete(0, tk.END)
