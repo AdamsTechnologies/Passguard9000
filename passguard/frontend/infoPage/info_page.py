@@ -18,12 +18,12 @@ class InfoFrame(ttk.Frame):
 
         # Left Navigation Frame
         self.navigation_frame = ttk.Frame(self)
-        self.navigation_frame.grid(row=0, column=0, sticky='nsew') # , padx=5, pady=10
+        self.navigation_frame.grid(row=0, column=0, sticky='nsew')
         self.navigation_frame.columnconfigure(0, weight=1)
 
         # Content Frame
         self.content_frame = ttk.Frame(self)
-        self.content_frame.grid(row=0, column=1, sticky='nsew') # , padx=5, pady=10
+        self.content_frame.grid(row=0, column=1, sticky='nsew')
         self.content_frame.columnconfigure(1, weight=1)
         self.content_frame.rowconfigure(0, weight=1)
 
@@ -55,7 +55,7 @@ class InfoFrame(ttk.Frame):
 
         # Divider
         self.divider = ttk.Separator(self.navigation_frame, orient='horizontal')
-        self.divider.grid(row=1, column=0, sticky='ew', padx=(10,0)) #(row=1, column=0, sticky='ew', pady=(0, 10))
+        self.divider.grid(row=1, column=0, sticky='ew', padx=(10,0))
 
         # Navigation Buttons with custom styles
         for index, item in enumerate(self.nav_items.keys()):
@@ -105,7 +105,7 @@ class InfoFrame(ttk.Frame):
             frame,
             text="PassGuard 9000™",
             font=('Helvetica', 18, 'bold'),
-        ).grid(row=row, column=0, pady=5, padx=10, sticky='n')#(row=row, column=0, pady=(0, 10), padx=20, sticky='n')
+        ).grid(row=row, column=0, pady=5, padx=10, sticky='n')
         row += 1
 
         ttk.Separator(frame, orient='horizontal').grid(row=row, column=0, sticky='ew', padx=20)
@@ -166,7 +166,7 @@ class InfoFrame(ttk.Frame):
             frame,
             text="Product Roadmap",
             font=('Helvetica', 18, 'bold'),
-        ).grid(row=row, column=0, pady=5, padx=10, sticky='n') #(row=row, column=0, pady=(0, 10), padx=20, sticky='n')
+        ).grid(row=row, column=0, pady=5, padx=10, sticky='n')
         row += 1
 
         ttk.Separator(frame, orient='horizontal').grid(row=row, column=0, sticky='ew', padx=20)
