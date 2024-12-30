@@ -187,12 +187,10 @@ class SQLiteController:
                 data = [dict(item, **batch_id_update) for item in data]
             for row in data:
                 update_query, values = scripts.create_update_statement(table_name=table_name, data=row, unique_keys=unique_keys)
-
                 cursor.execute(update_query, values)
                 if cursor.rowcount == 0:
                     logging.info('must insert...')
                     insert_query, values = scripts.create_insert_statement(table_name=table_name, data=[row])
-                    logging.info(f"{insert_query}, {values}")
                     cursor.execute(insert_query, values[0])
                 
         resp = dict(status_code=200, severity='info', log_msg=f"Upserted {len(data)} rows to {table_name}.", system_generated=True)

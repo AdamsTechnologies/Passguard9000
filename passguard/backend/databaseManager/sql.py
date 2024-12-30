@@ -1,6 +1,7 @@
 import os
 import logging
 import sqlite3
+from io import BytesIO
 from collections import namedtuple
 from contextlib import contextmanager
 from passguard.backend.abstracts.abstract_methods import DatabaseInterface
@@ -9,7 +10,11 @@ class SQLite(DatabaseInterface):
     """
     Simple but efficient database class. Utilize to query SQLite database or execute commands.
     Note: does not validate inputs; relies on sqlite3 validations.
-    `It is not advised to send this class unsanitized user input`
+    
+    Params:
+            db_file (str): Path to the SQLite database file or ':memory:' for in-memory DB.
+            db_bytes (bytes): Optional; decrypted database content to load into memory.
+            uri (bool): Use URI mode for SQLite connections.
 
     Example usage:
     ```
@@ -24,7 +29,7 @@ class SQLite(DatabaseInterface):
         sql.execute_commands(sql: any)
     """
     # TODO this is about 99% identical to SQLServer... lets join 'em together..
-    def __init__(self, db_file: str, uri:bool=False):
+    def __init__(self, db_file: str, db_bytes:bytes=None, uri:bool=False):
         if uri:
             self.db_file=db_file
         else:
@@ -41,14 +46,33 @@ class SQLite(DatabaseInterface):
             # self.db_file = ':memory:' if ':memory:' in db_file else f"{db_file}.db" if not db_file.endswith('.db') else db_file
         self.uri=uri
         self.conn = None
-
+        self.db_bytes = db_bytes
+    
     def _connect(self):
         if self.conn is None:
             try:
-                self.conn = sqlite3.connect(self.db_file, uri=self.uri)
+                if self.db_bytes:
+                    # Load database from byte stream
+                    self.conn = sqlite3.connect(':memory:')
+                    byte_stream = BytesIO(self.db_bytes)
+                    disk_conn = sqlite3.connect(f"file:{self.db_file}?mode=memory&cache=shared", uri=True)
+                    with disk_conn:
+                        disk_conn.backup(self.conn)
+                    disk_conn.close()
+                else:
+                    # Regular connection
+                    self.conn = sqlite3.connect(self.db_file, uri=self.uri)
             except sqlite3.Error as ex:
                 logging.error(f"Connection failed.")
                 raise ex
+            
+    # def _connect(self):
+    #     if self.conn is None:
+    #         try:
+    #             self.conn = sqlite3.connect(self.db_file, uri=self.uri)
+    #         except sqlite3.Error as ex:
+    #             logging.error(f"Connection failed.")
+    #             raise ex
 
     def _close_up(self):
         if self.conn:

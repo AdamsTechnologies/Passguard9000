@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='Sequester',
+    name='Passguard9000',
     version='0.1.0',
     author='Jacob M. Adams',
     author_email='jakeadams@duck.com',

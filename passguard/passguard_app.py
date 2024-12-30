@@ -135,7 +135,7 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
                 salt=user_details.get('s', None)
             )
             self.db_obj = self.db_context.__enter__()
-
+            
             # Validate the database was decrypted by performing a simple query
             qry = self.db_obj['sql'].query("SELECT 1 FROM sqlite_master LIMIT 1;")
 
