@@ -3,6 +3,15 @@ from typing import Callable
 from ttkbootstrap.constants import *
 
 class SettingsFrame(ttk.Frame):
+    """
+    TODO create a clean template for options. like a dynamic form builder or something.
+    TODO update class to be more dynamic.
+        include user definable settings like:
+            idle-timer setting (default 15min)
+            ... 
+
+    TODO create theme-builder.
+    """
     def __init__(self, master, pg_styles:ttk.Style, appearance_func: Callable, change_password_func: Callable, change_master_password:Callable, log_func:Callable):
         super().__init__(master)
         self.master = master
@@ -17,7 +26,7 @@ class SettingsFrame(ttk.Frame):
             # TODO if needing to add more items to the Settings page, do so here. 
             # create a new func that will load the page with your widgets. 
             # Key = left nav button name, Value = function that loads the right frame.
-            "Appearance":self.show_appearance_settings, 
+            "Options":self.show_appearance_settings, 
             "Change Password":self.show_change_password,
             } 
         self.nav_buttons = {}
@@ -79,7 +88,7 @@ class SettingsFrame(ttk.Frame):
         for widget in self.content_frame.winfo_children():
             widget.destroy()
 
-        title_label = ttk.Label(self.content_frame, text="Appearance", font=("Helvetica", 16, "bold"))
+        title_label = ttk.Label(self.content_frame, text="Options", font=("Helvetica", 16, "bold"))
         title_label.grid(row=0, column=0, columnspan=3, padx=10, pady=(10, 5), sticky='n')
 
         divider = ttk.Separator(self.content_frame, orient='horizontal')
@@ -92,7 +101,7 @@ class SettingsFrame(ttk.Frame):
         appearance_frame.columnconfigure(1, weight=6)
         appearance_mode_label = ttk.Label(
             appearance_frame,#self.content_frame,
-            text="Appearance Mode:",
+            text="Theme:",
             font=("Helvetica", 12)
         )
         appearance_mode_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
@@ -107,7 +116,6 @@ class SettingsFrame(ttk.Frame):
         )
         appearance_mode_menu.grid(row=0, column=1, pady=5, sticky="w")
 
-    
     def show_change_password(self):
         # self.log_func("opening master password change page") # LOG MSG
         for widget in self.content_frame.winfo_children():
