@@ -1,6 +1,6 @@
 from passguard.backend.abstracts.abstract_methods import PasswordStorageInterface, EncryptionInterface, KeyStorageInterface
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Union
 import os
 import logging
 import base64
@@ -23,11 +23,11 @@ class PasswordController:
             * field: str - Default 'item'
             * check_if_exists_flag: bool - Default True
     """
-    def __init__(self, encrypto:EncryptionInterface, keystore:KeyStorageInterface, passtore:PasswordStorageInterface,  **params):
+    def __init__(self, encrypto:EncryptionInterface, passtore:PasswordStorageInterface, keystore:KeyStorageInterface=None, key:Union[str, bytes]=None,  **params):
         self.passtore = passtore
         self.encrypto = encrypto
         self.keystore = keystore
-        self.key = None
+        self.key = key
         self._initialize_key()
         self._initialize_pass()
     
@@ -77,13 +77,20 @@ class PasswordController:
         return self.keystore.set_item(key_field=key_sect, **data)
     
     def _initialize_key(self):
-        self.setup_store(store=self.keystore)
-        raw_key = self.keystore.get_item(section=self.keystore.key_section, field=self.keystore.key_field)
-        self.key = base64.urlsafe_b64decode(raw_key.encode('utf-8')) if raw_key else None
-        if self.key is None:
-            self.key = os.urandom(32)
-        self.encrypto = self.encrypto(key=self.key)
-        self._set_key()
+        # trying to preserve functionality.. so this will let us use a keystore if needed.            
+        if self.keystore is not None:
+            self.setup_store(store=self.keystore)
+            raw_key = self.keystore.get_item(section=self.keystore.key_section, field=self.keystore.key_field)
+            self.key = base64.urlsafe_b64decode(raw_key.encode('utf-8')) if raw_key else None
+            if self.key is None:
+                self.key = os.urandom(32)
+            self.encrypto = self.encrypto(key=self.key)
+            self._set_key()
+        elif self.key is not None:
+            self.encrypto = self.encrypto(key=self.key)
+        else:
+            raise AttributeError("could not determine which key to use")
+
     """
     ------------------- Password Wrangling -------------------
     """

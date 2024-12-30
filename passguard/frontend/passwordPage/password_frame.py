@@ -20,10 +20,10 @@ class PasswordFrame(ttk.Frame):
         ** - medium priority.
         *** - high priority.
     """
-    def __init__(self, master, pg_styles:ttk.Style, keystore: KeyStorageInterface, passtore: PasswordStorageInterface, log_func:Callable):
+    def __init__(self, master, pg_styles:ttk.Style, passtore: PasswordStorageInterface, log_func:Callable, keystore: KeyStorageInterface=None, key=None):
         super().__init__(master)
         self.master = master
-        self.password_controller = PasswordController(encrypto=Encrypto, keystore=keystore, passtore=passtore)
+        self.password_controller = PasswordController(encrypto=Encrypto, keystore=keystore, passtore=passtore, key=key)
         self.items_mapping = {}
         self.style = pg_styles
         self.password_card = None

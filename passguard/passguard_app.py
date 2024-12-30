@@ -24,7 +24,6 @@ from passguard.backend.controllers.database_controller import SQLiteController
 from passguard.backend.databaseManager.sqlite_encrypto import encrypted_database_context
 from passguard.backend.abstracts.abstract_methods import KeyStorageInterface, PasswordStorageInterface
 
-
 from sqlite3 import DatabaseError
 
 # EXECUTE: python -m adamsutils.PassGuard.passguard
@@ -41,6 +40,7 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
         self.keystore = None
         self.passtore = None
         self.db_obj = None  # Will hold decrypted database connection
+        self.derived_key =  None
         self.config_settings = {}
         self.config = AppInit()
 
@@ -131,15 +131,16 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
             self.db_context = encrypted_database_context(
                 db_path=self.db_location,
                 encrypto_cls=Encrypto,
-                password=user_details['p'],
+                password=(user_pass:=user_details['p']),
                 salt=user_details.get('s', None)
             )
             self.db_obj = self.db_context.__enter__()
             
+            self.derived_key, s = generate_key(password=user_pass, salt=self.db_obj.get('salt', None))
             # Validate the database was decrypted by performing a simple query
             qry = self.db_obj['sql'].query("SELECT 1 FROM sqlite_master LIMIT 1;")
 
-            self.keystore = KeyStorageInterface(controller=SQLiteController(db=self.db_obj['sql'], table_name="km"))
+            # self.keystore = KeyStorageInterface(controller=SQLiteController(db=self.db_obj['sql'], table_name="km")) # we are not using Keystores, instead deriving from master password...
             self.passtore = PasswordStorageInterface(controller=SQLiteController(db=self.db_obj['sql'], table_name="pm"))
             self._on_database_initialized()
         except DatabaseError:
@@ -215,8 +216,9 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
     def init_passwords_page(self):
         self.password_page = PasswordFrame(
             master=self.passwords_tab,
-            passtore=self.passtore,
+            passtore=self.passtore or None,
             keystore=self.keystore,
+            key=self.derived_key,
             pg_styles=self.styles.style,
             log_func=self.log_message  # Pass log_message method
         )
@@ -242,6 +244,17 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
             self.config_settings['appearance_theme'] = theme_name
             self.config.set_setting(**self.config_settings)
 
+    def on_closing(self):
+        try:
+            if hasattr(self, 'db_obj') and self.db_context:
+                # Manually exit the context manager
+                self.db_context.__exit__(None, None, None)
+                logging.info("Database encrypted and saved successfully.")
+        except Exception as ex:
+            logging.error(f"Failed to encrypt and save the database: {ex}")
+            Messagebox.show_error("Shutdown Error", "Failed to save the encrypted database.")
+        finally:
+            self.destroy()
 
     # ------------------------------------------------------------------------------------------------------------------------------
     # TODO EXPERIMENTAL CODE BEGIN
@@ -404,18 +417,6 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
     # ------------------------------------------------------------------------------------------------------------------------------
     # TODO EXPERIMENTAL CODE END
     # ------------------------------------------------------------------------------------------------------------------------------
-
-    def on_closing(self):
-        try:
-            if hasattr(self, 'db_obj') and self.db_context:
-                # Manually exit the context manager
-                self.db_context.__exit__(None, None, None)
-                logging.info("Database encrypted and saved successfully.")
-        except Exception as ex:
-            logging.error(f"Failed to encrypt and save the database: {ex}")
-            Messagebox.show_error("Shutdown Error", "Failed to save the encrypted database.")
-        finally:
-            self.destroy()
 
 # if __name__ == '__main__':
 #     app = App()
