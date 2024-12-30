@@ -190,7 +190,7 @@ class InfoFrame(ttk.Frame):
         for item in roadmap_items:
             ttk.Label(
                 frame,
-                text=f"• {item}",
+                text=f"{chr(0x25CF)} {item}",
                 font=('Helvetica', 12)
             ).grid(row=row, column=0, padx=40, pady=2, sticky='w')
             row += 1
