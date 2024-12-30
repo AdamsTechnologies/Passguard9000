@@ -1,4 +1,5 @@
 import os
+import time
 import shutil
 import logging
 import tempfile
@@ -27,7 +28,7 @@ from passguard.backend.abstracts.abstract_methods import KeyStorageInterface, Pa
 from sqlite3 import DatabaseError
 
 # EXECUTE: python -m adamsutils.PassGuard.passguard
-class App(ttk.Window):  # TODO review login page, seems slow after refectors.
+class App(ttk.Window):  # TODO SET idle_timeout in SETTINGS, use an enum up to 60mins.
     def __init__(self):
         super().__init__(themename='superhero', iconphoto=None) #, iconphoto=None
         # self.iconphoto(True, PhotoImage(file=resource_path('passguard/frontend/icons/PassGuardLogo.png'))) # TODO UNCOMMENT THIS OUT
@@ -36,6 +37,11 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
         self.styles = PassGuardStyles()
         self.db_location = 'datastore.db'
 
+        self.idle_timeout = 5 * 60  #5 * 60 # 5 minutes 
+        self.last_activity_time = time.time()
+        
+        self.bind_all("<Button-1>", self.reset_idle_time)
+        self.bind_all("<Key>", self.reset_idle_time)
         # Application configurations
         self.keystore = None
         self.passtore = None
@@ -49,7 +55,7 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
         # Initialize configurations, login, and pages
         self._init_configs()
         self.login()
-
+        self.check_inactivity()
 
     def log_message(self, message: str, duration:int=3000):
         """Log a message to the Snackbar."""
@@ -195,15 +201,18 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
 
         self.notebook.bind("<<NotebookTabChanged>>", self._on_tab_selected)
         self.notebook.select(self.passwords_tab)
-    
+        
     def _on_tab_selected(self, event):
         selected_tab = self.notebook.index(self.notebook.select())
-        if selected_tab == 0 and not hasattr(self, 'password_page'):
-            self.init_passwords_page()
-        elif selected_tab == 1 and not hasattr(self, 'settings_page'):
-            self.init_settings_page()
-        elif selected_tab == 2 and not hasattr(self, 'info_page'):
-            self.init_info_page()
+        if selected_tab == 0:
+            if not hasattr(self, 'password_page') or self.password_page is None:
+                self.init_passwords_page()
+        elif selected_tab == 1:
+            if not hasattr(self, 'settings_page') or self.settings_page is None:
+                self.init_settings_page()
+        elif selected_tab == 2:
+            if not hasattr(self, 'info_page') or self.info_page is None:
+                self.init_info_page()
 
     def init_info_page(self):
         self.info_page = InfoFrame(
@@ -244,6 +253,31 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
             self.config_settings['appearance_theme'] = theme_name
             self.config.set_setting(**self.config_settings)
 
+    def reset_idle_time(self, event=None):
+        self.last_activity_time = time.time()
+    
+    def check_inactivity(self):
+        current_time = time.time()
+        if (current_time - self.last_activity_time) > self.idle_timeout:
+            self.on_idle_logout()
+        self.after(5000, self.check_inactivity) # check every 5 seconds
+
+    def on_idle_logout(self):
+        """Perform the steps to lock the app and return to login."""
+        if self.db_context:
+            self.db_context.__exit__(None, None, None)
+            self.db_context = None
+            self.db_obj = None
+        if hasattr(self, 'derived_key'):
+            self.derived_key = None
+        self.keystore = None
+        self.passtore = None
+        self.password_page = None
+        if hasattr(self, 'notebook'):
+            self.notebook.destroy()
+        
+        self.login() # reopen the login dialog..
+
     def on_closing(self):
         try:
             if hasattr(self, 'db_obj') and self.db_context:
@@ -254,6 +288,13 @@ class App(ttk.Window):  # TODO review login page, seems slow after refectors.
             logging.error(f"Failed to encrypt and save the database: {ex}")
             Messagebox.show_error("Shutdown Error", "Failed to save the encrypted database.")
         finally:
+            self.db_obj = None
+            self.derived_key = None
+            self.keystore = None
+            self.passtore = None
+            self.password_page = None
+            if hasattr(self, 'notebook'):
+                self.notebook.destroy()
             self.destroy()
 
     # ------------------------------------------------------------------------------------------------------------------------------
