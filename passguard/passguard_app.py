@@ -13,6 +13,7 @@ from passguard.passguard_styles import PassGuardStyles
 from passguard.app_settings_manager import SettingsManager
 from passguard.frontend.infoPage.info_page import InfoFrame
 from passguard.frontend.tkReusables.snackbar import SnackBar
+from passguard.backend.pubSub.publish_subscribe import PubSub
 from passguard.backend.devsec.key_generator import generate_key
 from passguard.frontend.loginDialog.login_dialog import LoginDialog
 from passguard.frontend.settingsPage.settings_page import SettingsFrame
@@ -46,6 +47,7 @@ class App(ttk.Window):
         self.db_context = None
 
         # New: Use the SettingsManager to load all app settings
+        self.pubsub = PubSub()
         self.settings_manager = SettingsManager(db_path='app_settings.db')
 
         # Tracks user details from login
@@ -64,6 +66,8 @@ class App(ttk.Window):
         self.check_inactivity()  # schedule idle checking
 
         # Global bindings for idle timeout
+        self.pubsub.subscribe('theme', self._set_appearance_mode) # subscribe to changes for appearance mode.
+        self.pubsub.subscribe('idle_timeout', self._set_idle_timeout)
         self.bind_all("<Button-1>", self.reset_idle_time)
         self.bind_all("<Key>", self.reset_idle_time)
 
@@ -227,6 +231,7 @@ class App(ttk.Window):
             keystore=self.keystore,
             key=self.derived_key,
             pg_styles=self.styles.style,
+            pubsub=self.pubsub,
             log_func=self.log_message,
             settings_manager=self.settings_manager,
         )
@@ -240,9 +245,10 @@ class App(ttk.Window):
         self.settings_page = SettingsFrame(
             master=self.settings_tab,
             pg_styles=self.styles.style,
-            appearance_func=self._set_appearance_mode,  # for immediate theme change
+            # appearance_func=self._set_appearance_mode,  # for immediate theme change
             change_password_func=self.change_master_password,
             snackbar_messenger=self.log_message,
+            pubsub=self.pubsub,
             settings_manager=self.settings_manager,     # <-- NEW
         )
         self.settings_page.grid(row=0, column=0, sticky='nsew')
@@ -257,6 +263,9 @@ class App(ttk.Window):
     # ---------------------------------------------------------------------
     # Appearance (Theme)
     # ---------------------------------------------------------------------
+    def _set_idle_timeout(self, val:int):
+        self.idle_timeout = val
+
     def _set_appearance_mode(self, theme_name: str = 'superhero'):
         """
         Change the application theme.

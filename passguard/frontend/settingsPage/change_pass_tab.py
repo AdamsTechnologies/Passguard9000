@@ -2,13 +2,14 @@ import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 
 class ChangePasswordPage(ttk.Frame):
-    def __init__(self, master, style, change_password_func, settings_manager, snackbar_messenger, *args, **kwargs):
+    def __init__(self, master, style, change_password_func, settings_manager, snackbar_messenger, pubsub, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
         self.columnconfigure(0, weight=1)
         self.style = style
         self.settings_manager = settings_manager
         self.change_password_func = change_password_func
         self.show_password_var = ttk.BooleanVar(value=False)
+        self.pubsub=pubsub
         self.snackbar_messenger = snackbar_messenger
         self.create_widgets()
 

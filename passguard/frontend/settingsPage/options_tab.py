@@ -1,48 +1,60 @@
+from typing import Callable, Any
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from ttkbootstrap.tooltip import ToolTip
+from passguard.backend.pubSub.publish_subscribe import PubSub
 from passguard.backend.helpers.support_functs import apply_casing
 
 class OptionsPage(ttk.Frame):
-    def __init__(self, master, style, appearance_func, settings_manager, snackbar_messenger, *args, **kwargs):
+    def __init__(
+            self, 
+            master, 
+            style, 
+            settings_manager, 
+            pubsub:PubSub, 
+            snackbar_messenger, 
+            *args, **kwargs):
         super().__init__(master, *args, **kwargs)
         self.columnconfigure(0, weight=1)
         self.style = style
-        self.appearance_func = appearance_func
         self.settings_manager = settings_manager
         self.available_themes = self.style.theme_names()
         self.snackbar_messenger = snackbar_messenger
-        # Example settings items
+        self.pubsub = pubsub
+        
+        # Setting Options:
         self.settings_items = [
-            # theme
-            {
+            { # theme
+                "key":"theme",
                 "label": "Theme:",
                 "widget_type": "optionmenu",
                 "values": self.available_themes,
                 "default": self.style.theme_use(),
-                "callback": self.on_theme_change,
+                "value_format":None,
+                "snackbar": lambda val: f"Theme changed to: {val}",
                 # "tooltip": {'text':"change app theme", 'bootstyle':'info'},
             },
-            # idle timeout
-            {
+            { # idle timeout
+                "key":"idle_timeout",
                 "label": "Auto Timeout:",
                 "widget_type": "optionmenu",
                 "values": [1, 5, 10, 15, 30, 60],
-                "default": int(self.settings_manager.get('idle_timeout')/60) or 5, # divide by 60 to conver from seconds to minutes.
-                "callback": self.on_idle_timeout_change,
+                "default": int(self.settings_manager.get('idle_timeout')/60) or 5, # divide by 60 to convert from seconds to minutes.
+                "value_format": lambda val: (int(val)*60), # converts minutes to seconds
+                "snackbar": lambda val: f"auto logout after: {val} minutes",
                 "tooltip": {'text':"idle time before logging out. (minutes)", 'bootstyle':'info'},
             },
-            {
+            { # passlist_casing
+                "key":"passlist_case",
                 "label": "List Format:",
                 "widget_type": "optionmenu",
                 "values": ["none", "title", "upper", "lower"],
                 "default": self.settings_manager.get('passlist_case') or 'title',
-                "callback": self.on_case_changed,
+                "value_format":None,
+                "snackbar": lambda val: f"Password list format: {apply_casing(text=val, casing=val)}",
                 "tooltip": {'text':"formats the password list buttons", 'bootstyle':'info'},
             },
-            
         ]
-
         self.create_widgets()
 
     def create_widgets(self):
@@ -65,7 +77,6 @@ class OptionsPage(ttk.Frame):
             widget_type = item.get("widget_type", "entry").lower()
             values = item.get("values", [])
             default_val = item.get("default")
-            callback = item.get("callback")
             tool_tip = item.get("tooltip")
 
             # Label
@@ -74,7 +85,7 @@ class OptionsPage(ttk.Frame):
 
             if widget_type == "optionmenu":
                 var = ttk.StringVar(value=str(default_val))
-                option = ttk.OptionMenu(form_frame, var, var.get(), *values, command=callback)
+                option = ttk.OptionMenu(form_frame, var, var.get(), *values, command=lambda val, k=item["key"]: self.on_setting_changed(k, val)) # command=callback
                 option.grid(row=row_index, column=1, sticky='w', padx=5, pady=5)
                 item["variable"] = var
                 if tool_tip:
@@ -82,28 +93,25 @@ class OptionsPage(ttk.Frame):
             else:
                 # fallback to Entry or Combobox etc.
                 pass
+    
+    def _find_item_by_key(self, key: str):
+        for item in self.settings_items:
+            if item.get("key") == key:
+                return item
+        return None
 
-    def on_theme_change(self, new_theme):
+    def on_setting_changed(self, key:str, val:Any):
         """
-        Callback for theme changes.
+        One single callback to handle all dynamic settings changes.
         """
-        self.snackbar_messenger(f"Theme changed to: {new_theme}")
-        self.appearance_func(new_theme) # force update the theme immediately.
-        self.settings_manager.set("theme", new_theme)
-
-    def on_idle_timeout_change(self, new_idle):
-        """
-        Callback for idle timeout changes.
-        """
-        self.snackbar_messenger(f"auto logout after: {new_idle} minutes")
-        self.settings_manager.set("idle_timeout", (new_idle*60)) # multiply by 60 to convert minutes to seconds...
-
-    def on_case_changed(self, fmt):
-        """
-        Callback for format changes
-        """
-        self.snackbar_messenger(f"Password list format: {apply_casing(text=fmt, casing=fmt)}")
-        self.settings_manager.set("passlist_case", fmt) # multiply by 60 to convert minutes to seconds...
-        app = self.master.master.master.master
-        if hasattr(app, 'password_page') and app.password_page is not None:
-            app.password_page.refresh_password_list()
+        metadata = self._find_item_by_key(key)
+        if (value_format_func:=metadata.get("value_format")) is not None and callable(value_format_func):
+            value = value_format_func(val)
+        else:
+            value = val
+        
+        self.settings_manager.set(key, value) # update app settings
+        self.pubsub.publish(key, value)  # publish message for subscribers.
+        
+        if (snackbar_func:=metadata.get("snackbar")) and callable(snackbar_func):
+            self.snackbar_messenger(snackbar_func(val)) # write to snackbar

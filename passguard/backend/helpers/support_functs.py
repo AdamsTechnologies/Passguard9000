@@ -1,6 +1,6 @@
 from typing import Literal
 
-def apply_casing(text: str, casing:Literal["title", "upper", "lower", "none"]) -> str:
+def apply_casing(text: str, casing:Literal["none", "title", "upper", "lower", 'capitalize']) -> str:
     if not text:
         return text
     if casing == "upper":

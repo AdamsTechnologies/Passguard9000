@@ -3,6 +3,7 @@ from typing import Callable, Any
 from ttkbootstrap.constants import *
 
 # Import settings tabs.
+from passguard.backend.pubSub.publish_subscribe import PubSub
 from passguard.frontend.settingsPage.options_tab import OptionsPage
 from passguard.frontend.settingsPage.change_pass_tab import ChangePasswordPage
 
@@ -11,15 +12,15 @@ class SettingsFrame(ttk.Frame):
         self,
         master,
         pg_styles: ttk.Style,
-        appearance_func: Callable,
         change_password_func: Callable,
         snackbar_messenger: Callable,
+        pubsub:PubSub,
         settings_manager: Any
     ):
         super().__init__(master)
         self.master = master
         self.style = pg_styles
-        self.appearance_func = appearance_func
+        # self.appearance_func = appearance_func
         self.change_password_func = change_password_func
         self.snackbar_messenger = snackbar_messenger
         self.settings_manager = settings_manager
@@ -29,7 +30,7 @@ class SettingsFrame(ttk.Frame):
             self,
             style=self.style,
             settings_manager=self.settings_manager,
-            appearance_func=self.appearance_func,
+            pubsub=pubsub,
             snackbar_messenger=self.snackbar_messenger
         )
         self.change_pass_page = ChangePasswordPage(
@@ -37,6 +38,7 @@ class SettingsFrame(ttk.Frame):
             style=self.style,
             settings_manager=self.settings_manager,
             change_password_func=self.change_password_func,
+            pubsub=pubsub,
             snackbar_messenger=self.snackbar_messenger,
         )
         # If you add more pages, create them here...

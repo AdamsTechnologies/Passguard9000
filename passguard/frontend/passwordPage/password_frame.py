@@ -5,6 +5,7 @@ from typing import Callable, Any
 from passguard.backend.devsec.encrypto import Encrypto
 from passguard.frontend.passwordPage.password_list import PasswordList
 from passguard.frontend.passwordPage.password_card import PasswordCard
+from passguard.backend.pubSub.publish_subscribe import PubSub
 from passguard.backend.controllers.password_manager import PasswordController
 from passguard.backend.abstracts.abstract_methods import KeyStorageInterface, PasswordStorageInterface
 from passguard.frontend.passwordPage.password_creation_card import NewPasswordCard, UpdatePasswordCard
@@ -20,7 +21,7 @@ class PasswordFrame(ttk.Frame):
         ** - medium priority.
         *** - high priority.
     """
-    def __init__(self, master, pg_styles:ttk.Style, passtore: PasswordStorageInterface, settings_manager: Any, log_func:Callable, keystore: KeyStorageInterface=None, key=None ):
+    def __init__(self, master, pg_styles:ttk.Style, passtore: PasswordStorageInterface, settings_manager: Any, pubsub:PubSub, log_func:Callable, keystore: KeyStorageInterface=None, key=None ):
         super().__init__(master)
         self.master = master
         self.password_controller = PasswordController(encrypto=Encrypto, keystore=keystore, passtore=passtore, key=key)
@@ -29,9 +30,15 @@ class PasswordFrame(ttk.Frame):
         self.settings_manager = settings_manager
         self.password_card = None
         self._default_ = '-----' # TODO handle a default instead of the default hints...
+        self.pubsub = pubsub
         self.log_func = log_func
+        
+        #init
         self.create_widgets()
         self.load_passwords()
+        
+        self.pubsub.subscribe('passlist_case', self.refresh_password_list) # subscribe to password list case changes..
+
 
     def create_widgets(self):
         self.rowconfigure(0, weight=1)
@@ -73,7 +80,7 @@ class PasswordFrame(ttk.Frame):
         )
         self.password_list_frame.grid(row=1, column=0, sticky='nsew')
 
-    def refresh_password_list(self):
+    def refresh_password_list(self, *args, **kwargs):
         """
         refreshes the password btn list; this is purely to apply casing selections
         """
