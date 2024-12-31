@@ -26,12 +26,10 @@ from passguard.backend.abstracts.abstract_methods import KeyStorageInterface, Pa
 # ------------------------------------------------------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------------------------------------------------------
 
-class App(ttk.Window):  
-    # TODO FIX LAYOUT BUG IN INFO_PAGE. Can just mirror settings page.
-    # fyi reminder: latest works were total refactoring of settings page and how app settings are managed.
+class App(ttk.Window):
     def __init__(self):
         super().__init__(themename='superhero', iconphoto=None)
-        self.iconphoto(True, PhotoImage(file='passguard/frontend/icons/PassGuardLogo.png'))#self.iconphoto(True, PhotoImage(resource_path('passguard/frontend/icons/PassGuardLogo.png'))) # self.iconphoto(True, PhotoImage(file='passguard/frontend/icons/PassGuardLogo.png'))  switch when testing locally...
+        self.iconphoto(True, PhotoImage(resource_path('passguard/frontend/icons/PassGuardLogo.png'))) #self.iconphoto(True, PhotoImage(file='passguard/frontend/icons/PassGuardLogo.png')) # switch these when testing locally..
         self.title("PassGuard9000")
         self.geometry("800x500")
 
@@ -47,7 +45,7 @@ class App(ttk.Window):
         self.db_context = None
 
         # New: Use the SettingsManager to load all app settings
-        self.pubsub = PubSub()
+        self.pubsub = None
         self.settings_manager = SettingsManager(db_path='app_settings.db')
 
         # Tracks user details from login
@@ -64,10 +62,6 @@ class App(ttk.Window):
         self._init_configs()   # load theme, idle_timeout from SettingsManager
         self.login()           # show login flow
         self.check_inactivity()  # schedule idle checking
-
-        # subscriptions: begin subscribing after init completed.
-        self.pubsub.subscribe('theme', self._set_appearance_mode) # subscribe to changes for appearance mode.
-        self.pubsub.subscribe('idle_timeout', self._set_idle_timeout)
 
         # Global bindings for idle timeout
         self.bind_all("<Button-1>", self.reset_idle_time)
@@ -131,13 +125,13 @@ class App(ttk.Window):
 
             # Set up controllers
             self.passtore = PasswordStorageInterface(controller=SQLiteController(db=self.db_obj['sql'], table_name="pm"))
-            self._on_database_initialized()
+            self._after_database_initialized()
         except DatabaseError:
             raise DatabaseError("Decryption failed: file is not a valid database. Possibly incorrect credentials.")
         except Exception as ex:
             raise Exception(f"An error occurred during database initialization: {ex}")
 
-    def _on_database_initialized(self):
+    def _after_database_initialized(self):
         """
         Called once DB is successfully decrypted.
         """
@@ -145,6 +139,11 @@ class App(ttk.Window):
             return
         self._create_pages()
         self.create_snackbar()
+        
+        # subscriptions: begin subscribing after init completed.
+        self.pubsub = PubSub()
+        self.pubsub.subscribe('theme', self._set_appearance_mode) # subscribe to changes for appearance mode.
+        self.pubsub.subscribe('idle_timeout', self._set_idle_timeout)
 
     def login(self):
         """
@@ -311,6 +310,7 @@ class App(ttk.Window):
             self.db_context = None
             self.db_obj = None
         self.derived_key = None
+        self.pubsub = None
         self.keystore = None
         self.passtore = None
         self.password_page = None
@@ -335,6 +335,7 @@ class App(ttk.Window):
         finally:
             self.db_obj = None
             self.derived_key = None
+            self.pubsub = None
             self.keystore = None
             self.passtore = None
             self.password_page = None
