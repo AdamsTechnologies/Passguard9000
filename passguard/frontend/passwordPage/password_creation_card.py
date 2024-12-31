@@ -8,7 +8,7 @@ from passguard.backend.controllers.password_manager import PasswordController
 from passguard.frontend.passwordPage.complex_pass_generator import PassGeneratorDialog
 
 class PasswordCreationCard(ttk.Frame):
-    def __init__(self, master, pg_styles:ttk.Style, title: str, password_controller: PasswordController, data_reload_func: Callable, show_password_card:Callable, log_func:Callable, field_data: dict):
+    def __init__(self, master, pg_styles:ttk.Style, title: str, password_controller: PasswordController, data_reload_func: Callable, show_password_card:Callable, log_func:Callable, settings_manager: Any, field_data: dict):
         """
         Initializes the NewOrUpdatePasswordCard.
 
@@ -24,6 +24,7 @@ class PasswordCreationCard(ttk.Frame):
         self.data_reload_func = data_reload_func
         self.password_controller = password_controller
         self.style = pg_styles
+        self.settings_manager = settings_manager
         self._temp_val = None
         self.entries = {}
         self.show_password_card = show_password_card
@@ -331,8 +332,8 @@ class PasswordCreationCard(ttk.Frame):
 # New Password Card
 # ----------------------------------------------------------------------------------------
 class NewPasswordCard(PasswordCreationCard):
-    def __init__(self, master, pg_styles:ttk.Style, title: str, password_controller: PasswordController, data_reload_func: Callable, show_password_card:Callable, log_func:Callable, field_data: dict):
-        super().__init__(master=master, pg_styles=pg_styles, title=title, password_controller=password_controller, data_reload_func=data_reload_func, show_password_card=show_password_card, log_func=log_func, field_data=field_data)
+    def __init__(self, master, pg_styles:ttk.Style, title: str, password_controller: PasswordController, data_reload_func: Callable, show_password_card:Callable, log_func:Callable, settings_manager: Any, field_data: dict):
+        super().__init__(master=master, pg_styles=pg_styles, title=title, password_controller=password_controller, data_reload_func=data_reload_func, show_password_card=show_password_card, log_func=log_func, settings_manager=settings_manager, field_data=field_data)
         self.create_form(update_flag=False)
 
     def validate_pw_entry_data(self, data: Any) -> Any:
@@ -387,8 +388,8 @@ class UpdatePasswordCard(PasswordCreationCard):
     """
 
     """
-    def __init__(self, master, pg_styles:ttk.Style, title: str, password_controller: PasswordController, data_reload_func: Callable, show_password_card:Callable, log_func:Callable, field_data: dict):
-        super().__init__(master=master, pg_styles=pg_styles, password_controller=password_controller, data_reload_func=data_reload_func, title=title, show_password_card=show_password_card, log_func=log_func, field_data=field_data)
+    def __init__(self, master, pg_styles:ttk.Style, title: str, password_controller: PasswordController, data_reload_func: Callable, show_password_card:Callable, log_func:Callable, settings_manager: Any, field_data: dict):
+        super().__init__(master=master, pg_styles=pg_styles, password_controller=password_controller, data_reload_func=data_reload_func, title=title, show_password_card=show_password_card, log_func=log_func, settings_manager=settings_manager, field_data=field_data)
         self.create_form(update_flag=True)
         self.populate_fields(self.field_data)
 

@@ -9,7 +9,7 @@ SETTINGS_DEFINITION = {
         "default": None,
     },
     "s": { # salt
-        "type": str,
+        "type": bytes,
         "default": None,   
     },
     "theme": {

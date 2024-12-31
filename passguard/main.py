@@ -1,3 +1,4 @@
+# from passguard.passguard_app import App
 from passguard.passguard_app import App
 
 def main():

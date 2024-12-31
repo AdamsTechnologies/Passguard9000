@@ -1,4 +1,5 @@
 import json
+import base64
 from passguard.app_settings_def import SETTINGS_DEFINITION
 from passguard.backend.controllers.database_controller import SQLiteController
 
@@ -27,6 +28,19 @@ class SettingsManager:
     def _check_if_exists(self):
         self.db.create_if_not_exists(table_name=self.table_name, schema=self.schema)
 
+    def _parse_values(self, raw_value, desired_type):
+        if desired_type == int:
+            parsed_value = int(raw_value)
+        elif desired_type == float:
+            parsed_value = float(raw_value)
+        elif desired_type == bool:
+            parsed_value = (raw_value.lower() == "true")
+        elif desired_type == bytes:
+            parsed_value = base64.b64decode(raw_value)
+        else:
+            parsed_value = raw_value
+        return parsed_value
+
     def load_all_settings(self):
         """
         1) Pull all rows from the DB (key, value).
@@ -44,14 +58,7 @@ class SettingsManager:
                 raw_value = db_dict[key]
                 # Attempt to cast the raw_value to desired_type
                 try:
-                    if desired_type == int:
-                        parsed_value = int(raw_value)
-                    elif desired_type == float:
-                        parsed_value = float(raw_value)
-                    elif desired_type == bool:
-                        parsed_value = (raw_value.lower() == "true")
-                    else:
-                        parsed_value = raw_value
+                    parsed_value = self._parse_values(raw_value=raw_value, desired_type=desired_type)
                 except (ValueError, TypeError):
                     # fallback to default if cast fails
                     parsed_value = default_value
@@ -59,13 +66,13 @@ class SettingsManager:
                 parsed_value = default_value
 
             self._settings_cache[key] = parsed_value
-
+    
     def get(self, key):
         """
         Get a setting from the in-memory cache.
         """
         return self._settings_cache.get(key, None)
-
+    
     def set(self, key, value):
         """
         1) Update the in-memory cache.
@@ -73,10 +80,16 @@ class SettingsManager:
         """
         if key not in SETTINGS_DEFINITION:
             raise KeyError(f"Unknown setting '{key}'")
-
+        
+        desired_type = SETTINGS_DEFINITION[key]["type"]
         self._settings_cache[key] = value
-        str_value = str(value)
+        
+        if desired_type == bytes:
+            str_value = base64.b64encode(value).decode("ascii")
+        else:
+            str_value = str(value)
         self.db.set_item(key=key, value=str_value)
+        self.load_all_settings() # reload cache.
 
     def get_all(self):
         """

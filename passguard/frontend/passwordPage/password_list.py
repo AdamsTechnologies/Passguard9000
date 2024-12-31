@@ -7,11 +7,12 @@ from typing import List, Dict, Any, Callable
 from passguard.frontend.tkReusables.scrollable_frame import ScrollableFrame
 
 class PasswordList(ttk.Frame):
-    def __init__(self, master, pg_styles:ttk.Style, values: List[tuple], items_mapping: Dict[str, Dict[str, Any]], on_select: Callable, log_func:Callable):
+    def __init__(self, master, pg_styles:ttk.Style, values: List[tuple], items_mapping: Dict[str, Dict[str, Any]], on_select: Callable, settings_manager: Any, log_func:Callable):
         super().__init__(master)
         self.values = values
         self.items_mapping = items_mapping
         self.on_select = on_select
+        self.settings_manager = settings_manager
         self.selected_id = None
         self.style = pg_styles
         self.log_func=log_func
