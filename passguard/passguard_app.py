@@ -7,10 +7,10 @@ from tkinter import PhotoImage
 from sqlite3 import DatabaseError
 from ttkbootstrap.constants import *
 from ttkbootstrap.dialogs import Messagebox
-from passguard.resource_path import resource_path
+from passguard.backend.helpers.resource_path import resource_path
 from passguard.backend.devsec.encrypto import Encrypto
 from passguard.passguard_styles import PassGuardStyles
-from passguard.app_settings_manager import SettingsManager
+from passguard.settings_manager import SettingsManager
 from passguard.frontend.infoPage.info_page import InfoFrame
 from passguard.frontend.tkReusables.snackbar import SnackBar
 from passguard.backend.pubSub.publish_subscribe import PubSub

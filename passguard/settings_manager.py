@@ -1,6 +1,6 @@
 import json
 import base64
-from passguard.app_settings_def import SETTINGS_DEFINITION
+from passguard.settings_definition import SETTINGS_DEFINITION
 from passguard.backend.controllers.database_controller import SQLiteController
 
 class SettingsManager:
