@@ -92,7 +92,6 @@ class SettingsFrame(ttk.Frame):
 
         # Default to first item
         first_item = next(iter(self.pages.keys()))
-        print(f"{first_item=}")
         self.select_navigation_item(first_item)
 
 

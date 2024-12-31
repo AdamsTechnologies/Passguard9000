@@ -104,7 +104,7 @@ class SettingsManager:
         """
             can set multiple items before the cache is re-loaded.. 
         """
-        for key,value in obj:
+        for key,value in obj.items():
             desired_type = SETTINGS_DEFINITION[key]["type"] if key in SETTINGS_DEFINITION else str
             self._settings_cache[key] = value
             

@@ -29,7 +29,7 @@ class App(ttk.Window):
     # TODO FIX LAYOUT BUG IN INFO_PAGE. Can just mirror settings page.
     def __init__(self):
         super().__init__(themename='superhero', iconphoto=None)
-        self.iconphoto(True, PhotoImage(resource_path('passguard/frontend/icons/PassGuardLogo.png'))) # self.iconphoto(True, PhotoImage(file='passguard/frontend/icons/PassGuardLogo.png'))  switch when testing locally...
+        self.iconphoto(True, PhotoImage(file='passguard/frontend/icons/PassGuardLogo.png'))#self.iconphoto(True, PhotoImage(resource_path('passguard/frontend/icons/PassGuardLogo.png'))) # self.iconphoto(True, PhotoImage(file='passguard/frontend/icons/PassGuardLogo.png'))  switch when testing locally...
         self.title("PassGuard9000")
         self.geometry("800x500")
 
@@ -77,7 +77,7 @@ class App(ttk.Window):
         try:
             appearance_theme = self.settings_manager.get('theme') or 'superhero'
             self.idle_timeout = self.settings_manager.get('idle_timeout') or 300
-            self._set_appearance_mode(theme_name=appearance_theme, update_tbl=False)
+            self._set_appearance_mode(theme_name=appearance_theme)
         except Exception as ex:
             logging.error("Failed to initialize config settings: %s", ex)
             Messagebox.show_error("Configuration Error", "Failed to load application settings.")
@@ -258,8 +258,7 @@ class App(ttk.Window):
     # ---------------------------------------------------------------------
     def _set_appearance_mode(self, theme_name: str = 'superhero'):
         """
-        Change the application theme. If update_tbl is True,
-        also persist that choice in SettingsManager.
+        Change the application theme.
         """
         self.style.theme_use(theme_name)
         self.styles.reapply_styles()
