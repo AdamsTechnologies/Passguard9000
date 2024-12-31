@@ -20,7 +20,6 @@ class SettingsFrame(ttk.Frame):
         super().__init__(master)
         self.master = master
         self.style = pg_styles
-        # self.appearance_func = appearance_func
         self.change_password_func = change_password_func
         self.snackbar_messenger = snackbar_messenger
         self.settings_manager = settings_manager

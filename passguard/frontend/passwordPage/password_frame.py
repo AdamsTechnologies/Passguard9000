@@ -15,7 +15,6 @@ class PasswordFrame(ttk.Frame):
     """
     PASSWORDFRAME FEATURES:
         * double clicking a button in the passwordlist will copy the password to clipboard. *
-        ** make password list case senstive, allow a setting to make it title case **
     LEGEND:
         * - low priority.
         ** - medium priority.

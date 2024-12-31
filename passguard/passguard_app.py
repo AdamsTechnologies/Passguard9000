@@ -65,9 +65,11 @@ class App(ttk.Window):
         self.login()           # show login flow
         self.check_inactivity()  # schedule idle checking
 
-        # Global bindings for idle timeout
+        # subscriptions: begin subscribing after init completed.
         self.pubsub.subscribe('theme', self._set_appearance_mode) # subscribe to changes for appearance mode.
         self.pubsub.subscribe('idle_timeout', self._set_idle_timeout)
+
+        # Global bindings for idle timeout
         self.bind_all("<Button-1>", self.reset_idle_time)
         self.bind_all("<Key>", self.reset_idle_time)
 
