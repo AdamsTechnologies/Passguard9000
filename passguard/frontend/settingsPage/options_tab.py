@@ -29,7 +29,7 @@ class OptionsPage(ttk.Frame):
                 "values": [1, 5, 10, 15, 30, 60],
                 "default": 5,
                 "callback": self.on_idle_timeout_change,
-                "tooltip": {'text':"(minutes) idle before auto log out", 'bootstyle':'info'},
+                "tooltip": {'text':"time idle before logging out. (minutes)", 'bootstyle':'info'},
             },
         ]
 

@@ -4,9 +4,9 @@ from ttkbootstrap.constants import *
 
 
 class InfoFrame(ttk.Frame):
+    # TODO currently the frames are all wonky.. update to mirror how settings_page works.
     def __init__(self, master, pg_styles: ttk.Style, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
-
         self.style = pg_styles
         self.email = 'jakeadams@duck.com'  # TODO Updated email address
         self.nav_buttons = {}
@@ -14,8 +14,8 @@ class InfoFrame(ttk.Frame):
 
         # Configure grid layout for the main frame
         self.rowconfigure(0, weight=1)
-        self.columnconfigure(0, weight=1, uniform='col')  # 33%
-        self.columnconfigure(1, weight=3, uniform='col')  # 66%
+        self.columnconfigure(0, weight=1, uniform='col')  # 25%
+        self.columnconfigure(1, weight=3, uniform='col')  # 75%
 
         # Left Navigation Frame
         self.navigation_frame = ttk.Frame(self)
@@ -121,6 +121,7 @@ class InfoFrame(ttk.Frame):
         ttk.Label(
             frame,
             text=info_text,
+            wraplength=600,
             font=('Helvetica', 12),
             justify='left',
         ).grid(row=row, column=0, pady=20, padx=20, sticky='w')

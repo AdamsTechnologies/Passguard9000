@@ -26,6 +26,7 @@ from passguard.backend.abstracts.abstract_methods import KeyStorageInterface, Pa
 # ------------------------------------------------------------------------------------------------------------------------------------------
 
 class App(ttk.Window):  
+    # TODO FIX LAYOUT BUG IN INFO_PAGE. Can just mirror settings page.
     def __init__(self):
         super().__init__(themename='superhero', iconphoto=None)
         self.iconphoto(True, PhotoImage(file='passguard/frontend/icons/PassGuardLogo.png')) # resource_path('passguard/frontend/icons/PassGuardLogo.png')
@@ -165,11 +166,10 @@ class App(ttk.Window):
             try:
                 self._initialize_database(user_details=user_details)
                 
-                self.settings_manager.set('r', 1)
-                self.settings_manager.set('s', self.db_obj['salt'])
+                appdata={'r':1, 's':self.db_obj['salt']}
                 if not stored_username:
-                    self.settings_manager.set('u', user_details['u'])
-
+                    appdata.update({'u':user_details['u']})
+                self.settings_manager.set_items(obj=appdata)
                 self.user_details = user_details
                 break  # Successful login
             except DatabaseError as ex:
@@ -256,7 +256,7 @@ class App(ttk.Window):
     # ---------------------------------------------------------------------
     # Appearance (Theme)
     # ---------------------------------------------------------------------
-    def _set_appearance_mode(self, theme_name: str = 'superhero', update_tbl: bool = True):
+    def _set_appearance_mode(self, theme_name: str = 'superhero'):
         """
         Change the application theme. If update_tbl is True,
         also persist that choice in SettingsManager.
@@ -264,9 +264,6 @@ class App(ttk.Window):
         self.style.theme_use(theme_name)
         self.styles.reapply_styles()
         self.update_idletasks()
-
-        if update_tbl:
-            self.settings_manager.set('theme', theme_name)
 
     # ---------------------------------------------------------------------
     # Snackbar / Logging

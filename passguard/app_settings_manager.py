@@ -73,6 +73,23 @@ class SettingsManager:
         """
         return self._settings_cache.get(key, None)
     
+
+    def set_items(self, obj:dict):
+        """
+        can set multiple items before the cache is re-loaded.. 
+        """
+        for key,value in obj:
+            desired_type = SETTINGS_DEFINITION[key]["type"] if key in SETTINGS_DEFINITION else str
+            self._settings_cache[key] = value
+            
+            if desired_type == bytes:
+                str_value = base64.b64encode(value).decode("ascii")
+            else:
+                str_value = str(value)
+            self.db.set_item(key=key, value=str_value)
+        self.load_all_settings() # reload cache.
+
+
     def set(self, key, value):
         """
         1) Update the in-memory cache.
