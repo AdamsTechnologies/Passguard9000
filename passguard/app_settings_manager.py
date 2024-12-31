@@ -43,9 +43,9 @@ class SettingsManager:
 
     def load_all_settings(self):
         """
-        1) Pull all rows from the DB (key, value).
-        2) Parse them (cast them to correct Python type).
-        3) If something is missing, use the default.
+            1) Pull all rows from the DB (key, value).
+            2) Parse them (cast them to correct Python type).
+            3) If something is missing, use the default.
         """
         rows = self.db.get_all_items(return_single=False)
         db_dict = {row["key"]: row["value"] for row in rows} if rows else {}
@@ -67,33 +67,24 @@ class SettingsManager:
 
             self._settings_cache[key] = parsed_value
     
+
     def get(self, key):
         """
-        Get a setting from the in-memory cache.
+            Get a setting from the in-memory cache.
         """
         return self._settings_cache.get(key, None)
     
-
-    def set_items(self, obj:dict):
+    
+    def get_all(self):
         """
-        can set multiple items before the cache is re-loaded.. 
+            Return all settings as a dict (in-memory).
         """
-        for key,value in obj:
-            desired_type = SETTINGS_DEFINITION[key]["type"] if key in SETTINGS_DEFINITION else str
-            self._settings_cache[key] = value
-            
-            if desired_type == bytes:
-                str_value = base64.b64encode(value).decode("ascii")
-            else:
-                str_value = str(value)
-            self.db.set_item(key=key, value=str_value)
-        self.load_all_settings() # reload cache.
-
-
+        return dict(self._settings_cache)
+    
     def set(self, key, value):
         """
-        1) Update the in-memory cache.
-        2) Convert value to string and persist in DB.
+            1) Update the in-memory cache.
+            2) Convert value to string and persist in DB.
         """
         if key not in SETTINGS_DEFINITION:
             raise KeyError(f"Unknown setting '{key}'")
@@ -108,8 +99,21 @@ class SettingsManager:
         self.db.set_item(key=key, value=str_value)
         self.load_all_settings() # reload cache.
 
-    def get_all(self):
+
+    def set_items(self, obj:dict):
         """
-        Return all settings as a dict (in-memory).
+            can set multiple items before the cache is re-loaded.. 
         """
-        return dict(self._settings_cache)
+        for key,value in obj:
+            desired_type = SETTINGS_DEFINITION[key]["type"] if key in SETTINGS_DEFINITION else str
+            self._settings_cache[key] = value
+            
+            if desired_type == bytes:
+                str_value = base64.b64encode(value).decode("ascii")
+            else:
+                str_value = str(value)
+            self.db.set_item(key=key, value=str_value)
+        self.load_all_settings() # reload cache.
+
+
+    

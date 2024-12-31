@@ -29,7 +29,7 @@ class App(ttk.Window):
     # TODO FIX LAYOUT BUG IN INFO_PAGE. Can just mirror settings page.
     def __init__(self):
         super().__init__(themename='superhero', iconphoto=None)
-        self.iconphoto(True, PhotoImage(file='passguard/frontend/icons/PassGuardLogo.png')) # resource_path('passguard/frontend/icons/PassGuardLogo.png')
+        self.iconphoto(True, PhotoImage(resource_path('passguard/frontend/icons/PassGuardLogo.png'))) # self.iconphoto(True, PhotoImage(file='passguard/frontend/icons/PassGuardLogo.png'))  switch when testing locally...
         self.title("PassGuard9000")
         self.geometry("800x500")
 
