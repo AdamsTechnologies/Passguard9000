@@ -27,7 +27,7 @@ class OptionsPage(ttk.Frame):
                 "label": "Auto Timeout:",
                 "widget_type": "optionmenu",
                 "values": [1, 5, 10, 15, 30, 60],
-                "default": 5,
+                "default": (self.settings_manager.get('idle_timeout')/60) or 5, # divide by 60 to conver from seconds to minutes.
                 "callback": self.on_idle_timeout_change,
                 "tooltip": {'text':"time idle before logging out. (minutes)", 'bootstyle':'info'},
             },

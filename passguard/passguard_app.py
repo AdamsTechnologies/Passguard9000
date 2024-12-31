@@ -27,6 +27,7 @@ from passguard.backend.abstracts.abstract_methods import KeyStorageInterface, Pa
 
 class App(ttk.Window):  
     # TODO FIX LAYOUT BUG IN INFO_PAGE. Can just mirror settings page.
+    # fyi reminder: latest works were total refactoring of settings page and how app settings are managed.
     def __init__(self):
         super().__init__(themename='superhero', iconphoto=None)
         self.iconphoto(True, PhotoImage(file='passguard/frontend/icons/PassGuardLogo.png'))#self.iconphoto(True, PhotoImage(resource_path('passguard/frontend/icons/PassGuardLogo.png'))) # self.iconphoto(True, PhotoImage(file='passguard/frontend/icons/PassGuardLogo.png'))  switch when testing locally...
@@ -210,13 +211,13 @@ class App(ttk.Window):
     def _on_tab_selected(self, event):
         selected_tab = self.notebook.index(self.notebook.select())
         if selected_tab == 0:
-            if not hasattr(self, 'password_page') or self.password_page is None:
+            if not hasattr(self, 'password_page') or self.password_page is None or not self.password_page.winfo_exists():
                 self.init_passwords_page()
         elif selected_tab == 1:
-            if not hasattr(self, 'settings_page') or self.settings_page is None:
+            if not hasattr(self, 'settings_page') or self.settings_page is None or not self.settings_page.winfo_exists():
                 self.init_settings_page()
         elif selected_tab == 2:
-            if not hasattr(self, 'info_page') or self.info_page is None:
+            if not hasattr(self, 'info_page') or self.info_page is None or not self.info_page.winfo_exists():
                 self.init_info_page()
 
     def init_passwords_page(self):
@@ -304,6 +305,7 @@ class App(ttk.Window):
         self.password_page = None
         if hasattr(self, 'notebook'):
             self.notebook.destroy()
+
 
         self.login()  # Re-open the login dialog
 
