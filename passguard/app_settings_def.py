@@ -20,5 +20,9 @@ SETTINGS_DEFINITION = {
         "type": int,
         "default": 300 # 300 seconds = 5 minutes
     },
+    "passlist_case": {
+        "type": str,
+        "default": 'title' # "none", "lower", "upper", "capitalize" ?
+    },
     # Add more as needed
 }

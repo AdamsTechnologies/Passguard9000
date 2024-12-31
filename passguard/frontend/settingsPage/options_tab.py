@@ -1,6 +1,7 @@
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from ttkbootstrap.tooltip import ToolTip
+from passguard.backend.helpers.support_functs import apply_casing
 
 class OptionsPage(ttk.Frame):
     def __init__(self, master, style, appearance_func, settings_manager, snackbar_messenger, *args, **kwargs):
@@ -27,10 +28,19 @@ class OptionsPage(ttk.Frame):
                 "label": "Auto Timeout:",
                 "widget_type": "optionmenu",
                 "values": [1, 5, 10, 15, 30, 60],
-                "default": (self.settings_manager.get('idle_timeout')/60) or 5, # divide by 60 to conver from seconds to minutes.
+                "default": int(self.settings_manager.get('idle_timeout')/60) or 5, # divide by 60 to conver from seconds to minutes.
                 "callback": self.on_idle_timeout_change,
-                "tooltip": {'text':"time idle before logging out. (minutes)", 'bootstyle':'info'},
+                "tooltip": {'text':"idle time before logging out. (minutes)", 'bootstyle':'info'},
             },
+            {
+                "label": "List Format:",
+                "widget_type": "optionmenu",
+                "values": ["none", "title", "upper", "lower"],
+                "default": self.settings_manager.get('passlist_case') or 'title',
+                "callback": self.on_case_changed,
+                "tooltip": {'text':"formats the password list buttons", 'bootstyle':'info'},
+            },
+            
         ]
 
         self.create_widgets()
@@ -87,3 +97,13 @@ class OptionsPage(ttk.Frame):
         """
         self.snackbar_messenger(f"auto logout after: {new_idle} minutes")
         self.settings_manager.set("idle_timeout", (new_idle*60)) # multiply by 60 to convert minutes to seconds...
+
+    def on_case_changed(self, fmt):
+        """
+        Callback for format changes
+        """
+        self.snackbar_messenger(f"Password list format: {apply_casing(text=fmt, casing=fmt)}")
+        self.settings_manager.set("passlist_case", fmt) # multiply by 60 to convert minutes to seconds...
+        app = self.master.master.master.master
+        if hasattr(app, 'password_page') and app.password_page is not None:
+            app.password_page.refresh_password_list()

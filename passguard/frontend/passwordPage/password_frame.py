@@ -73,6 +73,12 @@ class PasswordFrame(ttk.Frame):
         )
         self.password_list_frame.grid(row=1, column=0, sticky='nsew')
 
+    def refresh_password_list(self):
+        """
+        refreshes the password btn list; this is purely to apply casing selections
+        """
+        self.password_list_frame.update_list(items_mapping=self.items_mapping)
+        
     def load_passwords(self):
         records = self.password_controller.get_all_records(decrypt_fields=[])
         if records:
