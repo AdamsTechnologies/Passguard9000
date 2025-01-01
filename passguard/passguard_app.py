@@ -7,7 +7,7 @@ from tkinter import PhotoImage
 from sqlite3 import DatabaseError
 from ttkbootstrap.constants import *
 from ttkbootstrap.dialogs import Messagebox
-from passguard.backend.helpers.resource_path import resource_path
+from passguard.resource_path import resource_path
 from passguard.backend.devsec.encrypto import Encrypto
 from passguard.passguard_styles import PassGuardStyles
 from passguard.settings_manager import SettingsManager
@@ -25,11 +25,10 @@ from passguard.backend.abstracts.abstract_methods import KeyStorageInterface, Pa
 
 # ------------------------------------------------------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------------------------------------------------------
-
 class App(ttk.Window):
     def __init__(self):
         super().__init__(themename='superhero', iconphoto=None)
-        self.iconphoto(True, PhotoImage(resource_path('passguard/frontend/icons/PassGuardLogo.png'))) #self.iconphoto(True, PhotoImage(file='passguard/frontend/icons/PassGuardLogo.png')) # switch these when testing locally..
+        self.iconphoto(True, PhotoImage(file=resource_path(os.path.join('frontend','icons','PassGuardLogo.png'))))
         self.title("PassGuard9000")
         self.geometry("800x500")
 

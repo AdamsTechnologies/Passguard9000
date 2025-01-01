@@ -1,4 +1,4 @@
-#define MyAppName "Passguard9000"
+#define MyAppName "Passguard"
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "PassGuard Industries"
 #define MyAppUrl "coming soon"
