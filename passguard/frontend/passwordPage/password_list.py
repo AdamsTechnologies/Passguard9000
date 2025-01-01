@@ -4,14 +4,16 @@ from datetime import datetime
 from ttkbootstrap.constants import *
 from typing import List, Dict, Any, Callable
 
+from passguard.backend.helpers.support_functs import apply_casing
 from passguard.frontend.tkReusables.scrollable_frame import ScrollableFrame
 
 class PasswordList(ttk.Frame):
-    def __init__(self, master, pg_styles:ttk.Style, values: List[tuple], items_mapping: Dict[str, Dict[str, Any]], on_select: Callable, log_func:Callable):
+    def __init__(self, master, pg_styles:ttk.Style, values: List[tuple], items_mapping: Dict[str, Dict[str, Any]], on_select: Callable, settings_manager: Any, log_func:Callable):
         super().__init__(master)
         self.values = values
         self.items_mapping = items_mapping
         self.on_select = on_select
+        self.settings_manager = settings_manager
         self.selected_id = None
         self.style = pg_styles
         self.log_func=log_func
@@ -115,8 +117,9 @@ class PasswordList(ttk.Frame):
 
     def update_list(self, items_mapping: Dict[str, Dict[str, Any]]):
         self.items_mapping = self.sort_password_list(items_mapping=items_mapping)
+        casing = self.settings_manager.get("passlist_case") or "title"
         self.values = [
-            (record['service'].title(), id)  # only show the title..
+            (apply_casing(text=record['service'], casing=casing), id)  # only show the title..
             for id, record in self.items_mapping.items()
         ]
         self.populate_buttons()
@@ -139,3 +142,4 @@ class PasswordList(ttk.Frame):
             previous_btn.configure(style="LEFTNAV.PassGuardLeftNav.TButton")
 
         self.selected_id=id
+

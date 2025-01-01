@@ -1,17 +1,18 @@
 import tkinter as tk
 import ttkbootstrap as ttk
-from typing import Callable
+from typing import Callable, Any
 from ttkbootstrap.constants import *
 from ttkbootstrap.tooltip import ToolTip
 
 from passguard.backend.controllers.password_manager import PasswordController
 
 class PasswordCard(ttk.Frame):
-    def __init__(self, master, parent, pg_styles:ttk.Style, password_controller: PasswordController, on_select: Callable, log_func:Callable, id: str, username: str, password: str, service: str, servicetype: str, url: str, **params):
+    def __init__(self, master, parent, pg_styles:ttk.Style, password_controller: PasswordController, on_select: Callable, log_func:Callable, settings_manager: Any, id: str, username: str, password: str, service: str, servicetype: str, url: str, **params):
         super().__init__(master)
         self.parent = parent
         self.password_controller = password_controller
         self.on_select = on_select
+        self.settings_manager = settings_manager
         self.default_val = str(chr(0x25CF) * 15)
         self.style = pg_styles
         self.log_func=log_func

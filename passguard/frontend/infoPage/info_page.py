@@ -1,206 +1,98 @@
 import tkinter as tk
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
-
+from typing import Dict, Callable
+from passguard.frontend.infoPage.roadmap_tab import RoadmapTab
+from passguard.frontend.infoPage.info_tab import InfoTab
 
 class InfoFrame(ttk.Frame):
     def __init__(self, master, pg_styles: ttk.Style, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
         self.style = pg_styles
-        self.email = 'jakeadams@duck.com'  # TODO Updated email address
         self.nav_buttons = {}
-        self.selected = None  # To track the currently selected navigation item
+        self.selected = None  # track the selected nav item
 
-        # Configure grid layout for the main frame
+        # dictionary of pages
+        self.pages = {}
+        self.setup_layout()
+        self.create_pages()
+        self.create_widgets()
+
+        # Default to first nav item
+        first_item = next(iter(self.pages.keys()))
+        self.select_navigation_item(first_item)
+
+    def setup_layout(self):
+        # 2 columns: left nav, right content
         self.rowconfigure(0, weight=1)
-        self.columnconfigure(0, weight=1)  # Navigation frame
-        self.columnconfigure(1, weight=3)  # Content frame
+        self.columnconfigure(0, weight=1, uniform='col')
+        self.columnconfigure(1, weight=3, uniform='col')
 
-        # Left Navigation Frame
         self.navigation_frame = ttk.Frame(self)
         self.navigation_frame.grid(row=0, column=0, sticky='nsew')
         self.navigation_frame.columnconfigure(0, weight=1)
 
-        # Content Frame
         self.content_frame = ttk.Frame(self)
         self.content_frame.grid(row=0, column=1, sticky='nsew')
-        self.content_frame.columnconfigure(1, weight=1)
+        self.content_frame.columnconfigure(0, weight=1)
         self.content_frame.rowconfigure(0, weight=1)
 
-        # Navigation items mapping
-        self.nav_items = {
-            "Info": self.show_info_page,
-            "Roadmap": self.show_roadmap_page
+    def create_pages(self):
+        # instantiate your separate page classes
+        self.info_tab = InfoTab(self.content_frame, style=self.style)
+        self.roadmap_tab = RoadmapTab(self.content_frame, style=self.style)
+
+        # dictionary that maps nav labels -> page instance
+        self.pages = {
+            "Info": self.info_tab,
+            "Roadmap": self.roadmap_tab,
         }
 
-        # Initialize navigation and content
-        self.create_widgets()
-
-        # Preload content frames
-        self.frames = {}
-        self.frames['Info'] = self.create_info_frame()
-        self.frames['Roadmap'] = self.create_roadmap_frame()
-
-        # Initially select the first navigation item
-        self.select_navigation_item(list(self.nav_items.keys())[0])
+        # place each page in content_frame
+        for page_key, page in self.pages.items():
+            page.grid(row=0, column=0, sticky='nsew')
 
     def create_widgets(self):
-        # Left Navigation Title
-        self.navigation_label = ttk.Label(
+        # Navigation Label
+        nav_label = ttk.Label(
             self.navigation_frame,
             text="Information",
             font=('Helvetica', 16, 'bold')
         )
-        self.navigation_label.grid(row=0, column=0, padx=(10,0), pady=(10, 5), sticky='nw')
+        nav_label.grid(row=0, column=0, padx=10, pady=(10,5), sticky='nw')
 
-        # Divider
-        self.divider = ttk.Separator(self.navigation_frame, orient='horizontal')
-        self.divider.grid(row=1, column=0, sticky='ew', padx=(10,0))
+        divider = ttk.Separator(self.navigation_frame, orient='horizontal')
+        divider.grid(row=1, column=0, sticky='ew', padx=10)
 
-        # Navigation Buttons with custom styles
-        for index, item in enumerate(self.nav_items.keys()):
-            button = ttk.Button(
+        # Create nav buttons
+        for index, (page_key, page_frame) in enumerate(self.pages.items()):
+            btn = ttk.Button(
                 self.navigation_frame,
-                text=item,
-                command=lambda value=item: self.select_navigation_item(value),
+                text=page_key,
+                command=lambda k=page_key: self.select_navigation_item(k),
                 style="LEFTNAV.PassGuardLeftNav.TButton"
             )
-            button.grid(row=index + 2, column=0, sticky='ew', padx=(10,0))
-            self.nav_buttons[item] = button
+            btn.grid(row=index+2, column=0, sticky='ew', padx=10)
+            self.nav_buttons[page_key] = btn
 
-        # Add weight to rows to push content to the top
-        self.navigation_frame.rowconfigure(len(self.nav_items) + 2, weight=1)
+        # Add weight so nav items push upward
+        self.navigation_frame.rowconfigure(len(self.pages)+2, weight=1)
 
-    def select_navigation_item(self, value):
-        if self.selected != value:
-            # Update styles of navigation buttons
-            previous_btn = self.nav_buttons.get(self.selected)
-            new_btn = self.nav_buttons.get(value)
-            if previous_btn:
-                previous_btn.configure(style='LEFTNAV.PassGuardLeftNav.TButton')
+    def select_navigation_item(self, page_key):
+        if self.selected != page_key:
+            # re-style old button
+            old_btn = self.nav_buttons.get(self.selected)
+            if old_btn:
+                old_btn.configure(style="LEFTNAV.PassGuardLeftNav.TButton")
+
+            # style new button
+            new_btn = self.nav_buttons.get(page_key)
             if new_btn:
-                new_btn.configure(style='LEFTNAV.Selected.TButton')
-            self.selected = value
+                new_btn.configure(style="LEFTNAV.Selected.TButton")
 
-            # Execute the associated function
-            self.nav_items.get(value)()
+            # raise the appropriate page
+            page = self.pages.get(page_key)
+            if page:
+                page.tkraise()
 
-    def show_info_page(self):
-        """Show the Info page."""
-        self.show_frame('Info')
-
-    def show_roadmap_page(self):
-        """Show the Roadmap page."""
-        self.show_frame('Roadmap')
-
-    def create_info_frame(self):
-        frame = ttk.Frame(self.content_frame)
-        frame.grid(row=0, column=0, sticky='nsew')
-        frame.columnconfigure(0, weight=1)
-
-        row = 0
-
-        # Title Label
-        ttk.Label(
-            frame,
-            text="PassGuard 9000™",
-            font=('Helvetica', 18, 'bold'),
-        ).grid(row=row, column=0, pady=5, padx=10, sticky='n')
-        row += 1
-
-        ttk.Separator(frame, orient='horizontal').grid(row=row, column=0, sticky='ew', padx=20)
-        row += 1
-
-        # Info Text
-        info_text = (
-            "A secure solution for managing passwords. "
-            "With advanced encryption and local data storage, your credentials "
-            "stay safe on your device—no data ever leaves your hands."
-        )
-        ttk.Label(
-            frame,
-            text=info_text,
-            wraplength=600,
-            font=('Helvetica', 12),
-            justify='left',
-        ).grid(row=row, column=0, pady=20, padx=20, sticky='w')
-        row += 1
-
-        # Key Features
-        ttk.Label(
-            frame,
-            text="Key Features:",
-            font=('Helvetica', 14, 'bold'),
-        ).grid(row=row, column=0, padx=20, sticky='w')
-        row += 1
-
-        features = [
-            "No internet connection required or used.",
-            "Securely stores and manages your passwords.",
-            "Layered Security and robust encryption ensures data protection.",
-            "Easily update and retrieve stored credentials.",
-            "We respect your privacy: No tracking, only encryption.",
-        ]
-        for feature in features:
-            ttk.Label(
-                frame,
-                text=f"{chr(0x25CF)} {feature}",
-                font=('Helvetica', 12),
-            ).grid(row=row, column=0, padx=40, pady=2, sticky='w')
-            row += 1
-
-        # Add weight to the last row to push content to the top
-        frame.rowconfigure(row, weight=1)
-
-        return frame
-
-    def create_roadmap_frame(self):
-        frame = ttk.Frame(self.content_frame)
-        frame.grid(row=0, column=0, sticky='nsew')
-        frame.columnconfigure(0, weight=1)
-
-        row = 0
-
-        # Title Label
-        ttk.Label(
-            frame,
-            text="Product Roadmap",
-            font=('Helvetica', 18, 'bold'),
-        ).grid(row=row, column=0, pady=5, padx=10, sticky='n')
-        row += 1
-
-        ttk.Separator(frame, orient='horizontal').grid(row=row, column=0, sticky='ew', padx=20)
-        row += 1
-
-        # Roadmap Items
-        ttk.Label(
-            frame,
-            text="Upcoming Features:",
-            font=('Helvetica', 14, 'bold'),
-        ).grid(row=row, column=0, pady=(20, 5), padx=20, sticky='w')
-        row += 1
-
-        roadmap_items = [
-            "Change master password",
-            "Customizable database location (e.g., USB, external drives)",
-            "Web Browser extension",
-            "Mobile app integration for Android and iOS",
-            "Theme Builder",
-        ]
-        for item in roadmap_items:
-            ttk.Label(
-                frame,
-                text=f"{chr(0x25CF)} {item}",
-                font=('Helvetica', 12)
-            ).grid(row=row, column=0, padx=40, pady=2, sticky='w')
-            row += 1
-
-        # Add weight to the last row to push content to the top
-        frame.rowconfigure(row, weight=1)
-
-        return frame
-
-    def show_frame(self, name):
-        """Show the specified frame."""
-        frame = self.frames[name]
-        frame.tkraise()
+            self.selected = page_key
