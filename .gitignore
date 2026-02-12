@@ -1,5 +1,5 @@
 app_settings.db
 datastore.db
-*.iss
-*.spec
+passguard.iss
+passguard.spec
 __pycache__
