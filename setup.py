@@ -3,8 +3,8 @@ from setuptools import setup, find_packages
 setup(
     name='Passguard9000',
     version='0.1.0',
-    author='Jacob M. Adams',
-    author_email='jakeadams@duck.com',
+    author='Adams Technologies, LLC',
+    author_email='contact@adamstechnologies.com',
     description='A secure password management tool.',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',

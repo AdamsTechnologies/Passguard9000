@@ -1,0 +1,5 @@
+app_settings.db
+datastore.db
+*.iss
+*.spec
+__pycache__
