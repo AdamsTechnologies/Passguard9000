@@ -8,7 +8,7 @@
 [Setup]
 ;SignTool=passguardsigntool
 Uninstallable=yes
-AppId={{5A867E7D-C337-4FB8-89C9-A23D86516057}
+AppId={}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
